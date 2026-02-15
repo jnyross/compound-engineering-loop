@@ -210,7 +210,8 @@ steps:
       rejected:
         retry_step: brainstorm
         pass_outputs: [issues]
-    max_retries: 50
+    # SAFETY: All retry paths share this counter. Do not add independent counters.
+    max_retries: 3
     on_exhausted:
       escalate_to: human
 

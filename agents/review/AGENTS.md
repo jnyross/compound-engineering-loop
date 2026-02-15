@@ -100,7 +100,7 @@ STATUS: done
 ```
 ISSUES: detailed list with file/line references and WHY each failed
 DECISION: rejected
-STATUS: retry
+STATUS: done
 ```
 
-**IMPORTANT:** Always output STATUS: done OR STATUS: retry. The workflow engine reads DECISION to determine whether to loop back to brainstorm (rejected) or proceed to compound (approved).
+**IMPORTANT:** Always output STATUS: done regardless of DECISION. The workflow engine reads DECISION to determine routing (approved → compound, rejected → brainstorm). STATUS tells the engine this agent has completed execution.
