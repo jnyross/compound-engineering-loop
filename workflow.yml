@@ -1,7 +1,30 @@
 id: compound-engineering-loop
 name: Compound Engineering Loop
-version: 1
+version: 2
 description: "Rigorous plan→execute→review cycle based on Compound Engineering principles. 80% of effort goes to planning and review, 20% in execution. Each cycle compounds: plans inform future plans, reviews catch more issues, patterns get documented. Set ANTFARM_MODE=autonomous for unattended execution (used by lfg/slfg)."
+
+polling:
+  model: default
+  timeoutSeconds: 1800
+
+cron:
+  interval_ms: 60000
+
+context:
+  task: "{{task}}"
+  repo: "{{repo}}"
+  branch: "{{branch}}"
+  review_issues: ""
+  brainstorm_output: ""
+  plan_file: ""
+  plan_summary: ""
+  implementation_summary: ""
+  files_changed: ""
+  pr_url: ""
+  review_notes: ""
+  decision: ""
+  learnings: ""
+  file_created: ""
 
 agents:
   - id: brainstorm
@@ -27,7 +50,7 @@ agents:
   - id: work
     name: Work Agent
     role: coding
-    description: Executes work plans efficiently with worktrees and task tracking
+    description: Executes work plans efficiently with task tracking
     timeoutSeconds: 1800
     workspace:
       baseDir: agents/work
@@ -59,28 +82,19 @@ steps:
     agent: brainstorm
     input: |
       You are in brainstorming mode. Your job is to explore WHAT to build through collaborative dialogue.
-      
+
       TASK:
       {{task}}
-      
-      PREVIOUS ISSUES (empty on first run):
-      {{issues}}
-      
-      Follow the brainstorming workflow:
-      1. Assess if requirements are clear - if so, suggest /workflows:plan instead
-      2. Run lightweight repo research to understand existing patterns
-      3. Ask questions one at a time to understand the idea
-      4. Explore 2-3 approaches with pros/cons
-      5. Capture design in docs/brainstorms/
-      6. Present next steps to user
-      
-      Load the brainstorming skill for detailed techniques.
-      
+
+      REVIEW_ISSUES (empty on first run):
+      {{review_issues}}
+
+      Follow the brainstorming workflow in your AGENTS.md.
+
       Reply with:
       BRAINSTORM_OUTPUT: summary of explored approaches and key decisions
       STATUS: done
     expects: "STATUS: done"
-    required_outputs: [brainstorm_output]
     max_retries: 2
     on_fail:
       escalate_to: human
@@ -89,29 +103,20 @@ steps:
     agent: plan
     input: |
       You are in planning mode. Your job is to transform feature descriptions into detailed implementation plans.
-      
+
       TASK:
       {{task}}
-      
+
       BRAINSTORM OUTPUT (if exists):
       {{brainstorm_output}}
-      
-      Instructions:
-      1. Check for existing brainstorm in docs/brainstorms/ that matches the task
-      2. Run local research in parallel (repo-research-analyst, learnings-researcher)
-      3. Decide if external research is needed (best-practices-researcher, framework-docs-researcher)
-      4. Create structured plan in docs/plans/ with proper date prefix and kebab-case filename
-      5. Include acceptance criteria with checkboxes
-      6. Run spec-flow-analyzer to validate requirements
-      7. Present next steps to user
-      
+
+      Follow the planning workflow in your AGENTS.md.
+
       Reply with:
       PLAN_FILE: path to created plan
-      PLAN_CONTENT: full plan content (for review reference)
       PLAN_SUMMARY: summary of the plan
       STATUS: done
     expects: "STATUS: done"
-    required_outputs: [plan_file, plan_content, plan_summary]
     max_retries: 2
     on_fail:
       escalate_to: human
@@ -120,41 +125,31 @@ steps:
     agent: work
     input: |
       You are in work mode. Your job is to execute plans efficiently.
-      
+
       TASK:
       {{task}}
-      
+
       PLAN FILE:
       {{plan_file}}
-      
-      PLAN CONTENT:
-      {{plan_content}}
-      
+
       PLAN SUMMARY:
       {{plan_summary}}
 
-      REVIEW ISSUES (if retrying from review):
-      {{issues}}
+      REPOSITORY: {{repo}}
+      BRANCH: {{branch}}
 
-      Instructions:
-      1. Read the plan completely and clarify any ambiguities
-      2. Set up environment (check branch, create worktree if needed)
-      3. Create TodoWrite tasks from the plan
-      4. Execute tasks in priority order
-      5. Write tests for new functionality
-      6. Run tests continuously
-      7. Make incremental commits
-      8. Run quality checks (lint, typecheck, tests)
-      9. Create PR with proper description including Post-Deploy Monitoring section
-      10. Capture and upload screenshots for UI changes
-      
+      REVIEW_ISSUES (if retrying from review):
+      {{review_issues}}
+
+      Follow the execution workflow in your AGENTS.md.
+      Read the full plan from the PLAN FILE path above.
+
       Reply with:
       IMPLEMENTATION_SUMMARY: what was implemented
       FILES_CHANGED: list of files
       PR_URL: link to PR (if created)
       STATUS: done
     expects: "STATUS: done"
-    required_outputs: [implementation_summary, files_changed]
     max_retries: 2
     on_fail:
       escalate_to: human
@@ -163,102 +158,76 @@ steps:
     agent: review
     input: |
       You are in review mode. Your job is to perform exhaustive code review.
-      
+
       TASK:
       {{task}}
-      
-      PLAN (what should have been implemented):
-      {{plan_content}}
-      
+
+      PLAN FILE:
+      {{plan_file}}
+
+      PLAN SUMMARY:
+      {{plan_summary}}
+
       IMPLEMENTATION SUMMARY:
       {{implementation_summary}}
-      
+
       FILES CHANGED:
       {{files_changed}}
-      
-      Instructions:
-      1. Determine review target (PR, branch, or current changes)
-      2. Set up worktree if needed for isolated review
-      3. Read compound-engineering.local.md to load review agents
-      4. Run parallel review agents:
-         - security-sentinel
-         - performance-oracle
-         - architecture-strategist
-         - agent-native-reviewer
-         - learnings-researcher
-      5. If migrations present: run schema-drift-detector, data-migration-expert
-      6. Ultra-thinking: analyze stakeholder perspectives, explore edge cases
-      7. Run code-simplicity-reviewer for simplification opportunities
-      8. Synthesize findings and create todo files in todos/ with P1/P2/P3 severity
-      
-      PROTECTED ARTIFACTS: Never flag docs/plans/*.md or docs/solutions/*.md for deletion.
-      
-      IMPORTANT: Always output STATUS: done regardless of your verdict.
-      The workflow reads DECISION to determine next steps.
-      
-      If implementation matches plan:
-      REVIEW_NOTES: summary of assessment
-      DECISION: approved
-      STATUS: done
-      
-      If minor issues found (localized fixes, specific files/lines):
-      ISSUES: detailed list of fixes needed with file:line references
-      DECISION: needs_fixes
-      STATUS: done
 
-      If fundamental issues (rethink approach, architectural problems):
-      ISSUES: detailed list with WHY each failed
-      DECISION: rejected
-      STATUS: done
+      PR URL:
+      {{pr_url}}
+
+      Follow the review workflow in your AGENTS.md.
+      Read the full plan from the PLAN FILE path above.
+
+      Always output STATUS: done. Output DECISION (approved, needs_fixes, or rejected).
+      Output REVIEW_NOTES and REVIEW_ISSUES per your AGENTS.md output format.
     expects: "STATUS: done"
-    decision_key: DECISION
-    on_decision:
-      approved:
-        next_step: compound
-      needs_fixes:
-        retry_step: work
-        pass_outputs: [issues]
-      rejected:
-        retry_step: brainstorm
-        pass_outputs: [issues]
-    # SAFETY: All retry paths share this counter. Do not add independent counters.
+    # ROUTING INTENT (requires antfarm decision routing — Track B):
+    # decision_key: DECISION
+    # on_decision:
+    #   approved: next_step → compound
+    #   needs_fixes: retry_step → work
+    #   rejected: retry_step → brainstorm
+    # Until Track B ships, pipeline is linear: review always advances to compound.
     max_retries: 3
-    on_exhausted:
+    on_fail:
       escalate_to: human
 
   - id: compound
     agent: compound
     input: |
       You are in compound mode. Your job is to document learnings for institutional knowledge.
-      
+
       TASK:
       {{task}}
-      
-      PLAN:
-      {{plan_content}}
-      
-      IMPLEMENTATION:
+
+      PLAN FILE:
+      {{plan_file}}
+
+      PLAN SUMMARY:
+      {{plan_summary}}
+
+      IMPLEMENTATION_SUMMARY:
       {{implementation_summary}}
-      
-      REVIEW NOTES:
+
+      REVIEW_NOTES:
       {{review_notes}}
-      
-      Instructions:
-      1. Run parallel subagents:
-         - Context Analyzer: extract problem type, symptoms
-         - Solution Extractor: identify root cause, working solution
-         - Related Docs Finder: search docs/solutions/ for related patterns
-         - Prevention Strategist: develop prevention strategies
-         - Category Classifier: determine optimal category/filename
-      2. Assemble single documentation file to docs/solutions/[category]/
-      3. Optionally run specialized agents (performance-oracle, security-sentinel, etc.)
-      
+
+      REVIEW_ISSUES:
+      {{review_issues}}
+
+      DECISION:
+      {{decision}}
+
+      Follow the documentation workflow in your AGENTS.md.
+      Read the full plan from the PLAN FILE path above if needed.
+
       Reply with:
       LEARNINGS: summary of documented patterns
       FILE_CREATED: path to documentation
       STATUS: done
     expects: "STATUS: done"
-    required_outputs: [learnings, file_created]
     max_retries: 2
     on_fail:
       escalate_to: human

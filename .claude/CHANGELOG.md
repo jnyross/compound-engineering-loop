@@ -5,6 +5,61 @@ All notable changes to the compound-engineering plugin will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.33.2] - 2026-02-15
+
+### Fixed
+
+- **agents/review/AGENTS.md** — Review now always outputs both REVIEW_NOTES and REVIEW_ISSUES (fixes stale context on retry, todo 019)
+- **agents/brainstorm/AGENTS.md, agents/work/AGENTS.md** — Downstream "not empty" checks now handle "none" sentinel value
+- **workflow.yml** — Standardized all input labels to UPPER_SNAKE_CASE matching output keys (todo 018)
+- **agents/compound/AGENTS.md** — Added Phase 0 decision check; skips documentation on non-approved reviews (todo 017)
+
+### Changed
+
+- **agents/\*/AGENTS.md** — Added single-line output constraint and template safety note to all 5 agents (todo 016)
+- **agents/plan/AGENTS.md** — PLAN_SUMMARY changed from "1-2 paragraph" to "1-2 sentence"
+- **agents/review/AGENTS.md** — Merged Deep Analysis into Code Review phase; removed YAGNI todo file creation step; renamed Step→Phase (todo 020)
+- **agents/plan/AGENTS.md** — Renamed Step→Phase for naming consistency (todo 020)
+- **agents/compound/AGENTS.md** — Removed redundant Common Mistakes table (todo 020)
+- **workflow.yml** — Condensed review step input to defer to AGENTS.md (todo 020)
+
+## [2.33.1] - 2026-02-15
+
+### Added
+
+- **docs/solutions/integration-issues/2026-02-15-workflow-runtime-capability-mismatch.md** — Solution document for antfarm runtime compatibility (compound phase output)
+- **todos/016-020** — Five code review findings (4 P2, 1 P3) from exhaustive multi-agent review
+
+## [2.33.0] - 2026-02-15
+
+### Changed
+
+- **workflow.yml** — Antfarm compatibility overhaul (Track A):
+  - Remove unsupported YAML fields: `decision_key`, `on_decision`, `on_exhausted`, `required_outputs`, `pass_outputs`
+  - Add `polling` config (1800s timeout) and `cron` interval (60s)
+  - Add `context` block initializing all template variables to empty strings
+  - Add `repo` and `branch` context variables for work agent
+  - Rename `issues` → `review_issues` to avoid global context key collision
+  - Remove `PLAN_CONTENT` from pipeline — agents read plan file from git instead (saves ~30-40KB in context)
+  - Add review context (`review_issues`, `review_notes`, `decision`) to compound step input
+  - Add routing intent comments documenting Track B design
+  - Bump workflow version to 2
+
+- **agents/\*/AGENTS.md** — Adapted all 5 agent prompts for OpenClaw compatibility:
+  - Change sync header to "OpenClaw version" (intentional divergence from Claude Code commands)
+  - Add "Shared Files" section for git-based file sharing between agents
+  - Remove Claude Code-only features: `TodoWrite`, `AskUserQuestion`, `skill:` loading, `Task subagent_type`, `/workflows:` commands, `agent-browser`, `git-worktree`, `rclone`
+  - Add retry-aware instructions (brainstorm: rejection context, work: fix-specific instructions)
+  - Add case sensitivity note for review DECISION output
+  - Add review context to compound agent input
+  - Convert parallel subagent operations to sequential steps
+
+### Summary
+
+- 29 agents, 24 commands, 17 skills, 1 MCP server
+
+---
+
 ## [2.32.2] - 2026-02-15
 
 ### Fixed
