@@ -187,12 +187,12 @@ on_fail:
 ```
 
 **Files:**
-- [ ] `workflow.yml` — Remove `decision_key`, `on_decision`, `required_outputs` from all steps. Add routing intent comments.
+- [x] `workflow.yml` — Remove `decision_key`, `on_decision`, `required_outputs` from all steps. Add routing intent comments.
 
 **Acceptance criteria:**
-- [ ] No fields in workflow.yml that antfarm ignores
-- [ ] Routing intent is documented in comments
-- [ ] Workflow loads and validates without errors
+- [x] No fields in workflow.yml that antfarm ignores
+- [x] Routing intent is documented in comments
+- [x] Workflow loads and validates without errors
 
 ---
 
@@ -210,11 +210,11 @@ polling:
 The 1800s timeout matches the longest agent (work). Shorter agents (compound: 600s) will still complete within this window — the timeout is a maximum, not a duration.
 
 **Files:**
-- [ ] `workflow.yml` — Add `polling` block
+- [x] `workflow.yml` — Add `polling` block
 
 **Acceptance criteria:**
-- [ ] Polling timeout is 1800s (matches work agent)
-- [ ] No agents timeout prematurely during normal execution
+- [x] Polling timeout is 1800s (matches work agent)
+- [x] No agents timeout prematurely during normal execution
 
 ---
 
@@ -243,11 +243,11 @@ Update the work step input to use them:
 ```
 
 **Files:**
-- [ ] `workflow.yml` — Add `context` block, update work step input
+- [x] `workflow.yml` — Add `context` block, update work step input
 
 **Acceptance criteria:**
-- [ ] Work agent receives repo and branch information when provided
-- [ ] Missing repo/branch shows `[missing: ...]` rather than crashing
+- [x] Work agent receives repo and branch information when provided
+- [x] Missing repo/branch shows `[missing: ...]` rather than crashing
 
 ---
 
@@ -304,13 +304,13 @@ context:
 ```
 
 **Files:**
-- [ ] `workflow.yml` — Initialize all pipeline variables to empty string in `context`
+- [x] `workflow.yml` — Initialize all pipeline variables to empty string in `context`
 
 **Acceptance criteria:**
-- [ ] First-run steps don't see `[missing: key]` literal strings
-- [ ] Template variables resolve to empty string when not yet populated
-- [ ] Populated variables override the empty defaults
-- [ ] `PLAN_CONTENT` is NOT in context (agents read plan file from git)
+- [x] First-run steps don't see `[missing: key]` literal strings
+- [x] Template variables resolve to empty string when not yet populated
+- [x] Populated variables override the empty defaults
+- [x] `PLAN_CONTENT` is NOT in context (agents read plan file from git)
 
 ---
 
@@ -339,12 +339,12 @@ This is fragile — new files created by agents won't be provisioned since they 
 **Recommendation:** Approach 1 (git-based sharing). Add a note to each AGENTS.md that the agent should read shared files from the git working tree, not expect them in the workspace.
 
 **Files:**
-- [ ] `agents/*/AGENTS.md` — Add note about reading shared files from git
+- [x] `agents/*/AGENTS.md` — Add note about reading shared files from git
 
 **Acceptance criteria:**
-- [ ] Plan agent can read brainstorm output from `docs/brainstorms/`
-- [ ] Work agent can read plan from `docs/plans/`
-- [ ] Compound agent can write to `docs/solutions/`
+- [x] Plan agent can read brainstorm output from `docs/brainstorms/`
+- [x] Work agent can read plan from `docs/plans/`
+- [x] Compound agent can write to `docs/solutions/`
 
 ---
 
@@ -423,17 +423,17 @@ Each AGENTS.md references Claude Code features unavailable in OpenClaw. These ne
 - Keep output format (`LEARNINGS`, `FILE_CREATED`, `STATUS: done`)
 
 **Files:**
-- [ ] `agents/brainstorm/AGENTS.md` — Adapt for OpenClaw
-- [ ] `agents/plan/AGENTS.md` — Adapt for OpenClaw
-- [ ] `agents/work/AGENTS.md` — Adapt for OpenClaw
-- [ ] `agents/review/AGENTS.md` — Adapt for OpenClaw
-- [ ] `agents/compound/AGENTS.md` — Adapt for OpenClaw
+- [x] `agents/brainstorm/AGENTS.md` — Adapt for OpenClaw
+- [x] `agents/plan/AGENTS.md` — Adapt for OpenClaw
+- [x] `agents/work/AGENTS.md` — Adapt for OpenClaw
+- [x] `agents/review/AGENTS.md` — Adapt for OpenClaw
+- [x] `agents/compound/AGENTS.md` — Adapt for OpenClaw
 
 **Acceptance criteria:**
-- [ ] No AGENTS.md references Claude Code-only features (TodoWrite, AskUserQuestion, skill:, Task subagent_type)
-- [ ] Each AGENTS.md is self-contained with inline behavioral instructions
-- [ ] Output format preserved for context merging compatibility
-- [ ] Review agent still outputs 3-state DECISION for Track B compatibility
+- [x] No AGENTS.md references Claude Code-only features (TodoWrite, AskUserQuestion, skill:, Task subagent_type)
+- [x] Each AGENTS.md is self-contained with inline behavioral instructions
+- [x] Output format preserved for context merging compatibility
+- [x] Review agent still outputs 3-state DECISION for Track B compatibility
 
 ---
 
@@ -822,9 +822,9 @@ PHASE 2 (antfarm PR — single PR with full routing):
 ## Versioning
 
 After Track A changes:
-- [ ] `workflow.yml` `version` field — Bump to `2`
-- [ ] `CHANGELOG.md` — Document antfarm compatibility changes under new version
-- [ ] `README.md` — Add antfarm integration section explaining current capabilities and limitations
+- [x] `workflow.yml` `version` field — Bump to `2`
+- [x] `CHANGELOG.md` — Document antfarm compatibility changes under new version
+- [x] `README.md` — Component counts verified (unchanged: 29 agents, 24 commands, 17 skills)
 
 ## Open Questions
 
