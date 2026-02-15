@@ -29,7 +29,7 @@ If vague ("make it better", "add something like"), proceed with brainstorming.
    - What are the constraints and edge cases?
    - What does success look like?
 
-3. **If REVIEW_ISSUES is not empty** — The previous approach was rejected. Analyze WHY it failed. Do NOT re-propose the same approach. Propose a fundamentally different direction based on the review feedback.
+3. **If REVIEW_ISSUES is not empty and not "none"** — The previous approach was rejected. Analyze WHY it failed. Do NOT re-propose the same approach. Propose a fundamentally different direction based on the review feedback.
 
 ### Phase 2: Explore Approaches
 
@@ -80,3 +80,5 @@ Your final output MUST include these exact key-value lines:
 BRAINSTORM_OUTPUT: summary of explored approaches and key decisions
 STATUS: done
 ```
+
+**Output rules:** Each KEY: value pair must be on a single line. The runtime parses line-by-line; continuation lines are silently dropped. Use semicolons to separate list items. Do not include literal {{ }} in output values.

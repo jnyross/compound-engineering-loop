@@ -86,7 +86,7 @@ steps:
       TASK:
       {{task}}
 
-      PREVIOUS REVIEW ISSUES (empty on first run):
+      REVIEW_ISSUES (empty on first run):
       {{review_issues}}
 
       Follow the brainstorming workflow in your AGENTS.md.
@@ -138,7 +138,7 @@ steps:
       REPOSITORY: {{repo}}
       BRANCH: {{branch}}
 
-      REVIEW ISSUES (if retrying from review):
+      REVIEW_ISSUES (if retrying from review):
       {{review_issues}}
 
       Follow the execution workflow in your AGENTS.md.
@@ -180,23 +180,8 @@ steps:
       Follow the review workflow in your AGENTS.md.
       Read the full plan from the PLAN FILE path above.
 
-      IMPORTANT: Always output STATUS: done regardless of your verdict.
-      The workflow reads DECISION to determine next steps.
-
-      If implementation matches plan:
-      REVIEW_NOTES: summary of assessment
-      DECISION: approved
-      STATUS: done
-
-      If minor issues found (localized fixes, specific files/lines):
-      REVIEW_ISSUES: detailed list of fixes needed with file:line references
-      DECISION: needs_fixes
-      STATUS: done
-
-      If fundamental issues (rethink approach, architectural problems):
-      REVIEW_ISSUES: detailed list with WHY each failed
-      DECISION: rejected
-      STATUS: done
+      Always output STATUS: done. Output DECISION (approved, needs_fixes, or rejected).
+      Output REVIEW_NOTES and REVIEW_ISSUES per your AGENTS.md output format.
     expects: "STATUS: done"
     # ROUTING INTENT (requires antfarm decision routing — Track B):
     # decision_key: DECISION
@@ -223,16 +208,16 @@ steps:
       PLAN SUMMARY:
       {{plan_summary}}
 
-      IMPLEMENTATION:
+      IMPLEMENTATION_SUMMARY:
       {{implementation_summary}}
 
-      REVIEW NOTES:
+      REVIEW_NOTES:
       {{review_notes}}
 
-      REVIEW ISSUES:
+      REVIEW_ISSUES:
       {{review_issues}}
 
-      REVIEW DECISION:
+      DECISION:
       {{decision}}
 
       Follow the documentation workflow in your AGENTS.md.

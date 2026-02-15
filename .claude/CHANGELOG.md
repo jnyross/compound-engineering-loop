@@ -5,6 +5,24 @@ All notable changes to the compound-engineering plugin will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.33.2] - 2026-02-15
+
+### Fixed
+
+- **agents/review/AGENTS.md** — Review now always outputs both REVIEW_NOTES and REVIEW_ISSUES (fixes stale context on retry, todo 019)
+- **agents/brainstorm/AGENTS.md, agents/work/AGENTS.md** — Downstream "not empty" checks now handle "none" sentinel value
+- **workflow.yml** — Standardized all input labels to UPPER_SNAKE_CASE matching output keys (todo 018)
+- **agents/compound/AGENTS.md** — Added Phase 0 decision check; skips documentation on non-approved reviews (todo 017)
+
+### Changed
+
+- **agents/\*/AGENTS.md** — Added single-line output constraint and template safety note to all 5 agents (todo 016)
+- **agents/plan/AGENTS.md** — PLAN_SUMMARY changed from "1-2 paragraph" to "1-2 sentence"
+- **agents/review/AGENTS.md** — Merged Deep Analysis into Code Review phase; removed YAGNI todo file creation step; renamed Step→Phase (todo 020)
+- **agents/plan/AGENTS.md** — Renamed Step→Phase for naming consistency (todo 020)
+- **agents/compound/AGENTS.md** — Removed redundant Common Mistakes table (todo 020)
+- **workflow.yml** — Condensed review step input to defer to AGENTS.md (todo 020)
+
 ## [2.33.1] - 2026-02-15
 
 ### Added

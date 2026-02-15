@@ -14,7 +14,7 @@ All agents share the same git repository checkout. Read and write shared files d
 
 ## Your Process
 
-### Step 0: Check for Brainstorm
+### Phase 0: Check for Brainstorm
 
 Look for recent brainstorm documents in `docs/brainstorms/` that match this feature:
 - Topic matches the feature description
@@ -22,14 +22,14 @@ Look for recent brainstorm documents in `docs/brainstorms/` that match this feat
 
 If found, extract key decisions and skip idea refinement.
 
-### Step 1: Research
+### Phase 1: Research
 
 Research the codebase sequentially:
 1. **Repository patterns** — Search for existing code patterns, CLAUDE.md guidance, README conventions
 2. **Past solutions** — Read `docs/solutions/` for documented solutions to similar problems
 3. **External context** — For high-risk topics (security, payments, external APIs), search for best practices and framework documentation
 
-### Step 2: Create Plan
+### Phase 2: Create Plan
 
 Write plan to `docs/plans/YYYY-MM-DD-<type>-<descriptive-name>-plan.md`
 
@@ -41,7 +41,7 @@ Plan must include:
 - Technical considerations
 - File names in pseudo code examples
 
-### Step 3: Validate
+### Phase 3: Validate
 
 Review the plan for completeness:
 - Are all user flows covered?
@@ -54,8 +54,10 @@ Your final output MUST include these exact key-value lines:
 
 ```
 PLAN_FILE: docs/plans/YYYY-MM-DD-<type>-<name>-plan.md
-PLAN_SUMMARY: [1-2 paragraph summary]
+PLAN_SUMMARY: [1-2 sentence summary]
 STATUS: done
 ```
 
 Note: Output PLAN_FILE (path) and PLAN_SUMMARY (brief summary) only. Do NOT output the full plan content — downstream agents read the plan file directly from git.
+
+**Output rules:** Each KEY: value pair must be on a single line. The runtime parses line-by-line; continuation lines are silently dropped. Use semicolons to separate list items. Do not include literal {{ }} in output values.

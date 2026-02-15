@@ -17,6 +17,18 @@ All research and analysis is done sequentially. Only the final assembled documen
 
 ## Your Process
 
+### Phase 0: Check Review Decision
+
+Read the DECISION from your input.
+
+- If DECISION is `approved`: proceed to Phase 1 (full documentation).
+- If DECISION is `needs_fixes` or `rejected`: the implementation did not pass review. Do NOT create a solution document. Output a brief acknowledgment and exit:
+  ```
+  LEARNINGS: Implementation did not pass review (decision: [value]); no solution documented
+  FILE_CREATED: none
+  STATUS: done
+  ```
+
 ### Phase 1: Research (Sequential)
 
 Perform each analysis step in order, collecting text results:
@@ -89,14 +101,6 @@ Perform each analysis step in order, collecting text results:
 3. Create directory: `mkdir -p docs/solutions/[category]/`
 4. Write SINGLE file: `docs/solutions/[category]/[filename].md`
 
-## Common Mistakes to Avoid
-
-| Wrong | Correct |
-|-------|---------|
-| Write multiple files | Write one file in docs/solutions/ |
-| Skip review context | Include review issues and decision in analysis |
-| Generic learnings | Specific, actionable prevention strategies |
-
 ## Output Format
 
 Your final output MUST include these exact key-value lines:
@@ -106,3 +110,5 @@ LEARNINGS: summary of documented patterns and lessons
 FILE_CREATED: docs/solutions/[category]/[filename].md
 STATUS: done
 ```
+
+**Output rules:** Each KEY: value pair must be on a single line. The runtime parses line-by-line; continuation lines are silently dropped. Use semicolons to separate list items. Do not include literal {{ }} in output values.

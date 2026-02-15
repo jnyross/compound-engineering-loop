@@ -2,7 +2,7 @@
 title: "Fix P2/P3 Code Review Findings from Track A Antfarm Compatibility"
 type: fix
 date: 2026-02-15
-status: draft
+status: completed
 todos: [016, 017, 018, 019, 020]
 ---
 
@@ -63,9 +63,9 @@ STATUS: done
 
 Without this, brainstorm and work agents would incorrectly enter retry mode when they see `REVIEW_ISSUES: none` from an approved review (Track B scenario).
 
-- [ ] Update review AGENTS.md output format to always emit both keys
-- [ ] Update brainstorm AGENTS.md to handle "none" sentinel
-- [ ] Update work AGENTS.md to handle "none" sentinel
+- [x] Update review AGENTS.md output format to always emit both keys
+- [x] Update brainstorm AGENTS.md to handle "none" sentinel
+- [x] Update work AGENTS.md to handle "none" sentinel
 
 #### 1.2 Label Naming Standardization (018)
 
@@ -83,8 +83,8 @@ Without this, brainstorm and work agents would incorrectly enter retry mode when
 | `workflow.yml` | 235 | `REVIEW DECISION:` | `DECISION:` |
 | `agents/work/AGENTS.md` | ~18 | `REVIEW ISSUES` | `REVIEW_ISSUES` |
 
-- [ ] Standardize all workflow.yml input labels to UPPER_SNAKE_CASE
-- [ ] Update work AGENTS.md reference
+- [x] Standardize all workflow.yml input labels to UPPER_SNAKE_CASE
+- [x] Update work AGENTS.md reference
 
 #### 1.3 Single-Line Output Constraint (016)
 
@@ -100,11 +100,11 @@ Example: FILES_CHANGED: app/models/user.rb; app/controllers/users_controller.rb
 
 Also fix plan agent's `[1-2 paragraph summary]` to `[1-2 sentence summary]`.
 
-- [ ] Add single-line constraint to brainstorm AGENTS.md
-- [ ] Add single-line constraint to plan AGENTS.md (fix paragraph -> sentence)
-- [ ] Add single-line constraint to work AGENTS.md
-- [ ] Add single-line constraint to review AGENTS.md
-- [ ] Add single-line constraint to compound AGENTS.md
+- [x] Add single-line constraint to brainstorm AGENTS.md
+- [x] Add single-line constraint to plan AGENTS.md (fix paragraph -> sentence)
+- [x] Add single-line constraint to work AGENTS.md
+- [x] Add single-line constraint to review AGENTS.md
+- [x] Add single-line constraint to compound AGENTS.md
 
 #### 1.4 Compound Non-Approved Handling (017)
 
@@ -127,7 +127,7 @@ Read the REVIEW DECISION from your input.
   ```
 ```
 
-- [ ] Add Phase 0 decision check to compound AGENTS.md
+- [x] Add Phase 0 decision check to compound AGENTS.md
 
 ### Phase 2: Simplification (020)
 
@@ -141,7 +141,7 @@ Applied after Phase 1. Changes organized by file to minimize context switching.
 | 020.2: Self-referential keys | **Keep** `task`, `repo`, `branch`. Removing without runtime verification risks breaking all step inputs. |
 | 020.3: Review step input | Condense lines 183-199 to 3 lines: `Always output STATUS: done. Output DECISION (approved/needs_fixes/rejected). Output REVIEW_NOTES and REVIEW_ISSUES per AGENTS.md.` |
 
-- [ ] Condense review step input in workflow.yml (020.3)
+- [x] Condense review step input in workflow.yml (020.3)
 
 #### 2.2 review/AGENTS.md Cleanup
 
@@ -157,9 +157,9 @@ Apply 020.4 + 020.5 + 020.6 as one atomic edit. Final section numbering:
 - Phase 3: Simplification Pass (was Step 4)
 - Phase 4: Synthesize Findings (was Step 5)
 
-- [ ] Remove Step 6 and todos/ reference (020.4)
-- [ ] Merge Step 3 into Step 2 (020.5)
-- [ ] Rename Step -> Phase in review AGENTS.md (020.6)
+- [x] Remove Step 6 and todos/ reference (020.4)
+- [x] Merge Step 3 into Step 2 (020.5)
+- [x] Rename Step -> Phase in review AGENTS.md (020.6)
 
 #### 2.3 plan/AGENTS.md Naming
 
@@ -167,7 +167,7 @@ Apply 020.4 + 020.5 + 020.6 as one atomic edit. Final section numbering:
 |------|--------|
 | 020.6 | Rename "Step N" to "Phase N" (4 headings: lines 17, 25, 32, 44) |
 
-- [ ] Rename Step -> Phase in plan AGENTS.md
+- [x] Rename Step -> Phase in plan AGENTS.md
 
 #### 2.4 compound/AGENTS.md Cleanup
 
@@ -175,13 +175,13 @@ Apply 020.4 + 020.5 + 020.6 as one atomic edit. Final section numbering:
 |------|--------|
 | 020.8: Common Mistakes table | Remove the table (lines 92-98). Constraints already stated elsewhere. |
 
-- [ ] Remove Common Mistakes table from compound AGENTS.md
+- [x] Remove Common Mistakes table from compound AGENTS.md
 
 ### Phase 3: Versioning
 
-- [ ] Bump version in `.claude/.claude-plugin/plugin.json` (2.33.1 -> 2.33.2)
-- [ ] Update `.claude/CHANGELOG.md` with `[2.33.2]` entry
-- [ ] Verify README.md component counts
+- [x] Bump version in `.claude/.claude-plugin/plugin.json` (2.33.1 -> 2.33.2)
+- [x] Update `.claude/CHANGELOG.md` with `[2.33.2]` entry
+- [x] Verify README.md component counts (no change — agents/commands/skills counts unchanged)
 
 ## Acceptance Criteria
 

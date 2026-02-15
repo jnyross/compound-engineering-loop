@@ -15,7 +15,7 @@ All agents share the same git repository checkout. Read and write shared files d
 
 1. **Read the plan completely.** The plan path is provided in your input as PLAN FILE. Read it from the git working tree. Do not start coding until you understand all requirements.
 
-2. **Check for retry mode.** If REVIEW ISSUES is not empty, this is a retry after review rejection:
+2. **Check for retry mode.** If REVIEW_ISSUES is not empty and not "none", this is a retry after review rejection:
    - Read the review issues carefully
    - Focus on fixing the listed issues rather than re-implementing from scratch
    - Run `git status` first to understand current state
@@ -87,3 +87,7 @@ FILES_CHANGED: list of files created or modified
 PR_URL: link to PR (if created)
 STATUS: done
 ```
+
+**Output rules:** Each KEY: value pair must be on a single line. The runtime parses line-by-line; continuation lines are silently dropped. Use semicolons to separate list items. Do not include literal {{ }} in output values.
+
+Example: FILES_CHANGED: app/models/user.rb; app/controllers/users_controller.rb; spec/models/user_spec.rb
