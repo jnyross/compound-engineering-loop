@@ -104,7 +104,7 @@ Core workflow commands use `workflows:` prefix to avoid collisions with built-in
 | `/deploy-docs` | Validate and prepare documentation for GitHub Pages deployment |
 | `/release-docs` | Build and update the documentation site with current plugin components |
 | `/test-browser` | Run browser tests on PR-affected pages |
-| `/xcode-test` | Build and test iOS apps on simulator |
+| `/test-xcode` | Build and test iOS apps on simulator |
 | `/feature-video` | Record video walkthroughs and add to PR description |
 
 ## Skills

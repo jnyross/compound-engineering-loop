@@ -190,7 +190,7 @@ When re-entering work from a review with issues:
    # Examples: bin/rails test, npm test, pytest, go test, etc.
 
    # Run linting (per CLAUDE.md)
-   # Use linting-agent before pushing to origin
+   # Use lint agent before pushing to origin
    ```
 
 2. **Consider Reviewer Agents** (Optional)
@@ -257,13 +257,9 @@ When re-entering work from a review with issues:
    ```
    See the `agent-browser` skill for detailed usage.
 
-   **Step 3: Upload using imgup skill**
-   ```bash
-   skill: imgup
-   # Then upload each screenshot:
-   imgup -h pixhost screenshot.png  # pixhost works without API key
-   # Alternative hosts: catbox, imagebin, beeimg
-   ```
+   **Step 3: Upload screenshots**
+
+   Use an image hosting service to upload screenshots for PR descriptions.
 
    **What to capture:**
    - **New screens**: Screenshot of the new UI
@@ -420,7 +416,7 @@ Before creating PR, verify:
 - [ ] All clarifying questions asked and answered
 - [ ] All TodoWrite tasks marked completed
 - [ ] Tests pass (run project's test command)
-- [ ] Linting passes (use linting-agent)
+- [ ] Linting passes (use lint agent)
 - [ ] Code follows existing patterns
 - [ ] Figma designs match implementation (if applicable)
 - [ ] Before/after screenshots captured and uploaded (for UI changes)
