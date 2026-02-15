@@ -34,3 +34,6 @@ vendor/bundle/
 
 # Node
 node_modules/
+
+# Git worktrees
+.worktrees/
