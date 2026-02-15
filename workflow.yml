@@ -4,7 +4,7 @@ version: 2
 description: "Rigorous plan→execute→review cycle based on Compound Engineering principles. 80% of effort goes to planning and review, 20% in execution. Each cycle compounds: plans inform future plans, reviews catch more issues, patterns get documented. Set ANTFARM_MODE=autonomous for unattended execution (used by lfg/slfg)."
 
 polling:
-  model: default
+  model: MiniMax-M2.5-highspeed
   timeoutSeconds: 1800
 
 cron:
