@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Credentials (IMPORTANT: rclone.conf contains cloud storage keys)
+*.pem
+*.key
+credentials.json
+rclone.conf
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Ruby
+.bundle/
+vendor/bundle/
+
+# Node
+node_modules/

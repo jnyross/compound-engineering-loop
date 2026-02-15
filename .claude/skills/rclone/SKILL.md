@@ -25,13 +25,15 @@ Guide the user to install:
 # macOS
 brew install rclone
 
-# Linux (script install)
-curl https://rclone.org/install.sh | sudo bash
-
-# Or via package manager
+# Linux
 sudo apt install rclone  # Debian/Ubuntu
 sudo dnf install rclone  # Fedora
+
+# Other platforms
+# Download from https://rclone.org/downloads/
 ```
+
+> **Note:** Package manager versions may lag behind upstream. For the latest version, download from https://rclone.org/downloads/
 
 ### If NO remotes are configured
 

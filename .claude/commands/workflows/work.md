@@ -16,6 +16,26 @@ This command takes a work document (plan, specification, or todo file) and execu
 
 <input_document> #$ARGUMENTS </input_document>
 
+## Mode Detection
+
+Check `ANTFARM_MODE` environment variable (default: `interactive`).
+
+| Mode | Behavior |
+|------|----------|
+| `interactive` (default) | Pause for human approval at branch selection and clarifying questions |
+| `autonomous` | Skip approval gates, auto-create feature branch, proceed with best judgment |
+
+When `ANTFARM_MODE=autonomous`: skip "Continue on this branch?" questions, auto-create feature branches, and proceed without user approval gates.
+
+## Fix Mode (when REVIEW ISSUES is non-empty)
+
+When re-entering work from a review with issues:
+1. Read the REVIEW ISSUES carefully
+2. Create TodoWrite tasks for each issue
+3. Fix issues in priority order
+4. Make incremental commits for each fix
+5. Re-run quality checks
+
 ## Execution Workflow
 
 ### Phase 1: Quick Start

@@ -14,10 +14,14 @@ if command -v rclone >/dev/null 2>&1; then
 else
     echo "✗ rclone NOT INSTALLED"
     echo
-    echo "Install with:"
-    echo "  macOS:  brew install rclone"
-    echo "  Linux:  curl https://rclone.org/install.sh | sudo bash"
-    echo "          or: sudo apt install rclone"
+    echo "Install rclone using your package manager:"
+    echo "  macOS:          brew install rclone"
+    echo "  Ubuntu/Debian:  sudo apt install rclone"
+    echo "  Fedora:         sudo dnf install rclone"
+    echo "  Other:          https://rclone.org/downloads/"
+    echo
+    echo "Note: Package manager versions may lag behind upstream."
+    echo "For the latest version, download from https://rclone.org/downloads/"
     exit 1
 fi
 
