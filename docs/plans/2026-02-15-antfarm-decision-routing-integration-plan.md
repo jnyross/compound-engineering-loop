@@ -2,9 +2,36 @@
 title: "feat: Add Decision Routing to Antfarm Integration"
 type: feature
 date: 2026-02-15
+deepened: 2026-02-15
 ---
 
 # Add Decision Routing to Antfarm Integration
+
+## Enhancement Summary
+
+**Deepened on:** 2026-02-15
+**Sections enhanced:** 6
+**Research agents used:** 15 (architecture-strategist, security-sentinel, performance-oracle, agent-native-reviewer, code-simplicity-reviewer, kieran-typescript-reviewer, spec-flow-analyzer, pattern-recognition-specialist, learnings-researcher ×3, orchestrating-swarms skill, agent-native-architecture skill, document-review skill, best-practices-researcher ×2)
+
+### Key Improvements
+
+1. **CRITICAL BUG FOUND:** B.1's approach of marking review step as `done` after backward routing breaks the retry loop — `advancePipeline()` will never re-pick a `done` step. Plan revised to skip B.1 entirely and go straight to B.2 with corrected status handling.
+2. **Simplified B.2:** Use existing `retry_count` column instead of inventing `decision_retry_count` in run metadata. Drop `skipped` status (leave as `waiting`). Drop B.3 entirely (YAGNI).
+3. **Security hardening:** Added output key allowlisting, single-pass template verification, and unified retry tracking to prevent context poisoning and retry budget circumvention.
+4. **Performance fix:** Remove `PLAN_CONTENT` from global context (saves ~30-40KB), use `PLAN_FILE` path instead.
+5. **Missing transactions:** All multi-statement backward routing must be wrapped in SQLite transactions (BEGIN IMMEDIATE).
+6. **Flow gaps filled:** Work agent needs retry-specific instructions, brainstorm needs rejection context, compound needs review context.
+7. **Data contracts:** Added explicit input/output contracts per step defining which keys are produced and consumed.
+
+### New Considerations Discovered
+
+- `retry_step` is dead across ALL 3 antfarm workflows (not just feature-dev) — antfarm issue #109 documents this gap
+- `StepResult` type already has `"retry"` status, confirming routing was always intended but never implemented
+- Antfarm's webhook system could be used for `escalate_to: human` notifications
+- Case sensitivity mismatch: `decision_key: DECISION` but `completeStep()` lowercases parsed keys — must use `.toLowerCase()` lookup
+- `getStepDefinition()` helper doesn't exist yet — must be created before B.2 can reference it
+- `run.metadata` access pattern in original plan was wrong — runs table stores context as JSON, not a separate metadata column
+- Self-loop guard needed: a step routing to itself via `retry_step` would cause an infinite loop
 
 ## Problem Statement
 
@@ -36,6 +63,25 @@ All findings below are verified against the actual TypeScript source in `snarkta
 
 **`workspace.files`** — Individual file copies only. `writeWorkflowFile()` copies one source file to one destination path. No directory tree support.
 
+### Research Insights: Antfarm Runtime
+
+**Key findings from deep source analysis (best-practices-researcher):**
+- `retry_step` is declared but dead across ALL 3 antfarm bundled workflows (feature-dev, code-review, bug-fix) — not just feature-dev as initially thought
+- Antfarm issue #109 explicitly documents the escalation/routing gap
+- `StepResult` type in `types.ts` already includes `"retry"` as a valid status, confirming routing was designed but never implemented in `step-ops.ts`
+- Antfarm's webhook system (`src/installer/webhooks.ts`) is functional and could power `escalate_to: human` notifications
+- The `medic` system handles infrastructure failures (agent crashes, timeouts) but NOT logical failures (wrong output, bad decisions)
+
+**SQLite best practices (best-practices-researcher, performance-oracle):**
+- Use WAL mode for concurrent read/write access: `PRAGMA journal_mode=WAL;`
+- Use `BEGIN IMMEDIATE` for write transactions to prevent SQLITE_BUSY on concurrent cron ticks
+- Wrap all multi-statement routing operations in transactions — partial state (e.g., target step set to `pending` but intermediate steps not reset) would corrupt the pipeline
+
+**Industry patterns for workflow routing (best-practices-researcher):**
+- Temporal, Step Functions, Airflow, and Argo all use per-step retry counters (not global)
+- GitHub Actions uses `if:` conditions for branching — closest analog to `on_decision`
+- All major orchestrators separate "did the step run" from "what did the step decide" — validates the STATUS/DECISION split
+
 ### Secondary integration gaps
 
 5. **No shared filesystem between agents.** Each agent runs in an isolated OpenClaw session. `workspace.files` only copies `AGENTS.md` — and only supports individual file mappings, not directories. The shared directories (`docs/brainstorms/`, `docs/plans/`, `docs/solutions/`, `todos/`) are inaccessible to agents.
@@ -56,6 +102,42 @@ Two tracks with different timelines:
 
 - **Track A (this repo):** Make workflow.yml run correctly on current antfarm by removing unsupported features and adapting agent prompts. Ships immediately.
 - **Track B (antfarm repo):** Implement `retry_step` in `failStep()` and `decision_key`/`on_decision` in `advancePipeline()`. Enables the review loop. Requires PR to snarktank/antfarm.
+
+### Research Insights: Solution Architecture
+
+**Plan structure (document-review skill):**
+- Track A and Track B are separate deliverables targeting different repos — consider them as independent work streams, not sequential phases
+- A.6 should be split into per-agent sub-tasks (brainstorm, plan, work, review, compound) since each has unique adaptation requirements
+
+**Architecture assessment (architecture-strategist):**
+- Linear-with-jumps routing works for 5 steps but has a scaling ceiling — acknowledge as intentional simplification, not a general-purpose workflow engine
+- Routing logic should be extracted into its own function (`routeDecision()`) rather than embedded in `completeStep()`
+- Stale context on backward routing: when re-running brainstorm→plan→work, the old `plan_content`, `implementation_summary`, etc. are still in global context and may confuse agents
+
+**Agent-native perspective (agent-native-architecture skill):**
+- Current architecture is orchestrator-native (antfarm drives the loop) — long-term, a single-agent loop pattern may be more robust
+- For now, the multi-step orchestrator is pragmatic given antfarm's constraints
+
+**Data contracts (orchestrating-swarms skill):**
+- Define explicit input/output contracts per step (see Data Contracts section below)
+- Establish file ownership boundaries: brainstorm writes to `docs/brainstorms/`, plan to `docs/plans/`, compound to `docs/solutions/`
+- Add error handling tables per step documenting expected failure modes
+
+## Data Contracts
+
+Each step has explicit input keys (consumed via `{{key}}`) and output keys (produced as `KEY: value`):
+
+| Step | Consumes | Produces | File Outputs |
+|------|----------|----------|--------------|
+| brainstorm | `task`, `review_issues` (empty on first run) | `BRAINSTORM_OUTPUT`, `STATUS` | `docs/brainstorms/*.md` |
+| plan | `task`, `brainstorm_output` | `PLAN_FILE`, `PLAN_SUMMARY`, `STATUS` | `docs/plans/*.md` |
+| work | `task`, `plan_file`, `plan_summary`, `repo`, `branch`, `review_issues` (empty on first run) | `IMPLEMENTATION_SUMMARY`, `FILES_CHANGED`, `PR_URL`, `STATUS` | source code changes |
+| review | `task`, `plan_file`, `implementation_summary`, `files_changed`, `pr_url` | `DECISION`, `REVIEW_ISSUES`, `REVIEW_NOTES`, `STATUS` | `todos/*.md` |
+| compound | `task`, `implementation_summary`, `review_issues`, `review_notes`, `decision` | `LEARNINGS`, `FILE_CREATED`, `STATUS` | `docs/solutions/*.md` |
+
+**Key renames (pattern-recognition-specialist):**
+- `issues` → `review_issues` (avoid generic key names in global context)
+- `PLAN_CONTENT` removed from context (performance-oracle: saves ~30-40KB; use `PLAN_FILE` path instead)
 
 ## Technical Approach
 
@@ -197,6 +279,30 @@ context:
 
 Option 2 is better — agents don't need to parse antfarm internals.
 
+**Research Insights (performance-oracle, pattern-recognition-specialist):**
+- Remove `PLAN_CONTENT` from the context initialization — storing full plan markdown in global context adds 30-40KB to every template resolution call. Use `PLAN_FILE` (path) instead and have agents read the file directly via git.
+- Rename `issues` → `review_issues` to avoid generic key collision risk (security-sentinel: any agent can overwrite any context key).
+- Add `decision` to initialization for compound agent compatibility.
+
+**Revised context block:**
+```yaml
+context:
+  task: "{{task}}"
+  repo: "{{repo}}"
+  branch: "{{branch}}"
+  review_issues: ""
+  brainstorm_output: ""
+  plan_file: ""
+  plan_summary: ""
+  implementation_summary: ""
+  files_changed: ""
+  pr_url: ""
+  review_notes: ""
+  decision: ""
+  learnings: ""
+  file_created: ""
+```
+
 **Files:**
 - [ ] `workflow.yml` — Initialize all pipeline variables to empty string in `context`
 
@@ -204,6 +310,7 @@ Option 2 is better — agents don't need to parse antfarm internals.
 - [ ] First-run steps don't see `[missing: key]` literal strings
 - [ ] Template variables resolve to empty string when not yet populated
 - [ ] Populated variables override the empty defaults
+- [ ] `PLAN_CONTENT` is NOT in context (agents read plan file from git)
 
 ---
 
@@ -258,24 +365,47 @@ Each AGENTS.md references Claude Code features unavailable in OpenClaw. These ne
 | `git-worktree` skill | Not available | Replace with direct git commands if needed. |
 | `agent-browser` | Not available | Remove. Screenshots not available in OpenClaw. |
 
+**Research Insights (spec-flow-analyzer, agent-native-reviewer, pattern-recognition-specialist):**
+
+**Critical flow gaps to address in A.6:**
+- **Work agent needs retry-specific instructions:** When re-run after review rejection, the work agent receives `{{review_issues}}` but has no instructions for how to handle it. Add a section: "If REVIEW_ISSUES is not empty, this is a retry — focus on fixing the listed issues rather than re-implementing from scratch."
+- **Brainstorm needs rejection context:** On rejection routing (Track B), brainstorm receives `{{review_issues}}` but doesn't know this means the previous approach was rejected. Add: "If REVIEW_ISSUES is not empty, the previous approach was rejected. Propose a fundamentally different approach."
+- **Compound agent needs review context on Track A:** On the linear path, compound runs after review but doesn't receive `{{review_issues}}`, `{{review_notes}}`, or `{{decision}}` in its input template. Add these to compound's input.
+- **No git artifact cleanup:** Work agent may leave WIP branches/commits that aren't cleaned up before retry. Add instructions for clean git state on retry.
+
+**AGENTS.md divergence strategy (pattern-recognition-specialist):**
+- AGENTS.md files currently have "Synchronized from .claude/commands/workflows/*.md — do not edit directly" header
+- For OpenClaw compatibility, AGENTS.md MUST diverge from the plugin commands
+- Make divergence explicit: change header to "OpenClaw version — see .claude/commands/workflows/*.md for Claude Code version"
+- Maintain both versions independently going forward
+
+**Agent output reliability (agent-native-reviewer):**
+- DECISION output case sensitivity: review agent may output `approved`, `Approved`, or `APPROVED`. Normalize to lowercase in `completeStep()` before routing.
+- Ensure all agents output `STATUS: done` consistently — any variation breaks `expects` matching.
+- Add structured output format reminder at the end of each AGENTS.md.
+
 **Per-agent changes:**
 
 **brainstorm/AGENTS.md:**
 - Remove `skill: brainstorming` reference → inline the brainstorming techniques
 - Remove `AskUserQuestion` → always produce output directly
 - Remove `repo-research-analyst` subagent → describe research steps inline
+- **ADD:** Retry-aware instructions — "If REVIEW_ISSUES is not empty, previous approach was rejected. Propose fundamentally different approach."
 - Keep output format (`BRAINSTORM_OUTPUT`, `STATUS: done`)
 
 **plan/AGENTS.md:**
 - Remove `skill:` references → inline planning methodology
 - Remove `repo-research-analyst`, `learnings-researcher`, `spec-flow-analyzer` subagent spawning → describe as sequential steps
 - Remove `best-practices-researcher`, `framework-docs-researcher` → describe as research steps
-- Keep output format (`PLAN_FILE`, `PLAN_CONTENT`, `PLAN_SUMMARY`, `STATUS: done`)
+- **CHANGE:** Output `PLAN_FILE` and `PLAN_SUMMARY` only — remove `PLAN_CONTENT` from outputs (performance: saves ~30-40KB in global context)
+- Keep output format (`PLAN_FILE`, `PLAN_SUMMARY`, `STATUS: done`)
 
 **work/AGENTS.md:**
 - Remove `skill: git-worktree`, `agent-browser`, `rclone` → direct git commands
 - Remove `TodoWrite` → use structured text output
 - Remove screenshot capture → not available
+- **ADD:** Retry-specific instructions — "If REVIEW_ISSUES is not empty, this is a retry. Focus on fixing the listed issues. Run `git status` first to understand current state."
+- **ADD:** Git cleanup instructions — "On retry, check for WIP branches or uncommitted changes before starting."
 - Keep output format (`IMPLEMENTATION_SUMMARY`, `FILES_CHANGED`, `PR_URL`, `STATUS: done`)
 
 **review/AGENTS.md:**
@@ -283,11 +413,13 @@ Each AGENTS.md references Claude Code features unavailable in OpenClaw. These ne
 - Remove `file-todos` skill → write todo files directly
 - Remove `code-simplicity-reviewer` subagent → describe simplification criteria
 - Keep 3-state output format (approved/needs_fixes/rejected) for future Track B compatibility
-- Keep output format (`DECISION`, `ISSUES`, `REVIEW_NOTES`, `STATUS: done`)
+- **ADD:** Output format reminder with case sensitivity note — "DECISION must be exactly one of: approved, needs_fixes, rejected (lowercase)"
+- Keep output format (`DECISION`, `REVIEW_ISSUES`, `REVIEW_NOTES`, `STATUS: done`)
 
 **compound/AGENTS.md:**
 - Remove 5 parallel subagents → describe as sequential analysis steps
 - Remove `compound-docs` skill → inline the documentation schema
+- **ADD:** Review context inputs — `{{review_issues}}`, `{{review_notes}}`, `{{decision}}` in input template
 - Keep output format (`LEARNINGS`, `FILE_CREATED`, `STATUS: done`)
 
 **Files:**
@@ -307,114 +439,81 @@ Each AGENTS.md references Claude Code features unavailable in OpenClaw. These ne
 
 ### Track B: Add Decision Routing to Antfarm (antfarm repo)
 
-Two incremental changes to the antfarm runtime, each independently useful.
+**REVISED based on research agent findings.** Original plan had B.1 (2-way via failStep) → B.2 (3-way via completeStep) → B.3 (required_outputs). Research agents identified critical bugs in B.1 and recommended skipping directly to B.2. B.3 dropped as YAGNI.
 
-#### B.1: Implement `retry_step` in `failStep()` — 2-way routing
+#### ~~B.1: SKIPPED — Do Not Implement retry_step via failStep()~~
 
-The `WorkflowStepFailure` type already declares `retry_step`. The feature-dev workflow already uses `on_fail: retry_step: implement`. But `failStep()` ignores this field and only retries the same step.
+**Why B.1 was removed (code-simplicity-reviewer, architecture-strategist):**
 
-**Change:** When a step fails and `retry_step` is configured, reset the TARGET step to `pending` (and all steps between target and current to `waiting`) instead of retrying the current step.
+The original B.1 approach hijacked the failure path: review agent would output `STATUS: retry` → doesn't match `expects: "STATUS: done"` → step "fails" → `failStep()` reads `retry_step` and routes backward. This has three fatal problems:
 
-**Implementation in `step-ops.ts`:**
+1. **CRITICAL BUG:** B.1 marks the review step as `done` after routing backward. But `advancePipeline()` finds the next step by `SELECT ... WHERE status = 'waiting' ORDER BY step_index ASC`. When the pipeline re-reaches the review step, it's already `done` — the pipeline skips it and advances to compound, completely bypassing the retry loop.
 
-```typescript
-export function failStep(stepId: string, error: string):
-  { retrying: boolean; runFailed: boolean } {
-  const db = getDb();
-  const step = db.prepare(
-    "SELECT run_id, step_id, retry_count, max_retries, type, current_story_id FROM steps WHERE id = ?"
-  ).get(stepId);
+2. **Semantic confusion:** Using "failure" to encode "the step succeeded but wants to route backward" conflates two orthogonal concepts. The STATUS/DECISION split (step succeeded vs. what to do next) is the correct separation.
 
-  if (!step) throw new Error(`Step not found: ${stepId}`);
+3. **2-way limitation:** `failStep()` can only route to one target. We need 3-way: approved → compound, needs_fixes → work, rejected → brainstorm. Building B.1 as a stepping stone would require ripping it out for B.2 anyway.
 
-  // Check max retries
-  const newRetryCount = step.retry_count + 1;
-  if (newRetryCount > step.max_retries) {
-    // Mark step failed, fail run
-    db.prepare(
-      "UPDATE steps SET status = 'failed', output = ?, retry_count = ?, updated_at = datetime('now') WHERE id = ?"
-    ).run(error, newRetryCount, stepId);
-    db.prepare(
-      "UPDATE runs SET status = 'failed', updated_at = datetime('now') WHERE id = ?"
-    ).run(step.run_id);
-    return { retrying: false, runFailed: true };
-  }
-
-  // NEW: Check for retry_step routing
-  const stepDef = getStepDefinition(step.run_id, step.step_id);
-  if (stepDef?.on_fail?.retry_step) {
-    const targetStepId = stepDef.on_fail.retry_step;
-
-    // Reset target step to pending
-    db.prepare(
-      "UPDATE steps SET status = 'pending', updated_at = datetime('now') WHERE run_id = ? AND step_id = ?"
-    ).run(step.run_id, targetStepId);
-
-    // Reset all steps between target and current to waiting
-    db.prepare(
-      "UPDATE steps SET status = 'waiting', updated_at = datetime('now') WHERE run_id = ? AND step_index > (SELECT step_index FROM steps WHERE run_id = ? AND step_id = ?) AND step_index < (SELECT step_index FROM steps WHERE run_id = ? AND step_id = ?)"
-    ).run(step.run_id, step.run_id, targetStepId, step.run_id, step.step_id);
-
-    // Mark current step as done (it completed, just decided to retry earlier step)
-    db.prepare(
-      "UPDATE steps SET status = 'done', output = ?, retry_count = ?, updated_at = datetime('now') WHERE id = ?"
-    ).run(error, newRetryCount, stepId);
-
-    return { retrying: true, runFailed: false };
-  }
-
-  // Existing behavior: retry same step
-  db.prepare(
-    "UPDATE steps SET status = 'pending', retry_count = ?, updated_at = datetime('now') WHERE id = ?"
-  ).run(newRetryCount, stepId);
-  return { retrying: true, runFailed: false };
-}
-```
-
-**What this unlocks for compound-engineering-loop:**
-
-Use the feature-dev pattern — review agent outputs `STATUS: retry` when issues found. This doesn't match `expects: "STATUS: done"`, so the step "fails". `failStep()` checks `on_fail: retry_step: work` and routes to the work step.
-
-```yaml
-# workflow.yml review step with B.1
-- id: review
-  agent: review
-  expects: "STATUS: done"
-  max_retries: 3
-  on_fail:
-    retry_step: work
-```
-
-**Limitation:** Only supports 2-way routing (approved vs. not-approved). Cannot distinguish between "needs minor fixes" and "fundamentally rejected".
-
-**Files to modify in antfarm:**
-- [ ] `src/installer/step-ops.ts` — Implement `retry_step` routing in `failStep()`
-- [ ] `src/installer/step-ops.ts` — Add `getStepDefinition()` helper to look up workflow spec for a step
-- [ ] `tests/step-ops.test.ts` — Add tests for retry_step routing
-
-**Acceptance criteria:**
-- [ ] `on_fail: retry_step: work` routes failed review to work step
-- [ ] Steps between target and current are reset to `waiting`
-- [ ] `retry_count` still increments and respects `max_retries`
-- [ ] Existing workflows without `retry_step` continue to work (same-step retry)
-- [ ] Feature-dev workflow's `on_fail: retry_step: implement` starts working
+**Skip directly to B.2 (decision routing in `completeStep()`).** This is the correct and complete solution.
 
 ---
 
-#### B.2: Implement `decision_key` / `on_decision` in `completeStep()` — 3-way routing
+#### B.2: Implement `decision_key` / `on_decision` in `completeStep()` — Full Decision Routing
 
-Full decision-based routing. When a step succeeds, read a specific output key and route based on its value.
+**Research Insights (kieran-typescript-reviewer, security-sentinel, performance-oracle, architecture-strategist):**
 
-**Implementation in `step-ops.ts`:**
+Critical fixes incorporated vs. original B.2 plan:
+- **Transaction safety:** All multi-statement routing wrapped in `db.transaction()` with `BEGIN IMMEDIATE` to prevent partial state on concurrent cron ticks
+- **`getStepDefinition()` must be created:** This function doesn't exist — must be implemented to look up the workflow spec for a given step
+- **Case sensitivity:** Normalize decision values to lowercase before routing lookup (agent may output `Approved`, `APPROVED`, or `approved`)
+- **Use existing `retry_count`:** Don't invent `decision_retry_count` in run metadata. Use the existing `retry_count` column on the TARGET step being re-run. This aligns with industry patterns (Temporal, Step Functions, Airflow all use per-step retry counters)
+- **Don't mark routed step as `done`:** On backward routing, mark the routing step (review) as `waiting` so it gets re-picked by `advancePipeline()` when the pipeline reaches it again
+- **Self-loop guard:** Validate that `retry_step` doesn't point to the current step (use existing same-step retry via `failStep()` for that)
+- **Drop `skipped` status:** Forward routing leaves intermediate steps as `waiting` — don't introduce a new status to the state machine
+- **Context key poisoning mitigation:** Document that global context merge means any step can overwrite any key. Use prefixed keys (`review_issues` not `issues`) and validate in workflow spec that no step re-uses another step's output keys
 
-Add decision routing to `completeStep()` AFTER output parsing but BEFORE calling `advancePipeline()`:
+**Prerequisites — new helper functions:**
 
 ```typescript
-// In completeStep(), after parsing and merging outputs:
+// getStepDefinition: Look up workflow spec for a step
+// Must load the workflow spec and find the matching step definition
+function getStepDefinition(runId: string, stepId: string): WorkflowStep | undefined {
+  const db = getDb();
+  const run = db.prepare(
+    "SELECT workflow_id FROM runs WHERE id = ?"
+  ).get(runId);
+  if (!run) return undefined;
 
-const stepDef = getStepDefinition(step.run_id, step.step_id);
-if (stepDef?.decision_key) {
-  const decision = parsed[stepDef.decision_key.toLowerCase()];
+  const spec = loadWorkflowSpec(run.workflow_id);
+  return spec.steps.find(s => s.id === stepId);
+}
+
+// routeDecision: Extracted routing logic (architecture-strategist recommendation)
+// Keep completeStep() focused on output parsing + context merge
+// routeDecision() handles all branching logic
+function routeDecision(
+  db: Database,
+  runId: string,
+  stepId: string,
+  stepIndex: number,
+  decision: string,
+  stepDef: WorkflowStep
+): { advanced: boolean; runCompleted: boolean } {
+  // ... routing implementation below ...
+}
+```
+
+**Implementation in `step-ops.ts` — `routeDecision()`:**
+
+```typescript
+function routeDecision(
+  db: Database,
+  runId: string,
+  stepId: string,
+  stepIndex: number,
+  output: string,
+  decision: string,
+  stepDef: WorkflowStep
+): { advanced: boolean; runCompleted: boolean } {
   const route = stepDef.on_decision?.[decision];
 
   if (!route) {
@@ -424,70 +523,95 @@ if (stepDef?.decision_key) {
   }
 
   if (route.next_step) {
-    // Forward routing: skip to a specific step
-    // Mark current step done
-    db.prepare(
-      "UPDATE steps SET status = 'done', output = ?, updated_at = datetime('now') WHERE id = ?"
-    ).run(output, stepId);
+    // Forward routing: mark current step done, set target to pending
+    // Leave intermediate steps as 'waiting' (not 'skipped' — no new status)
+    const routeForward = db.transaction(() => {
+      // Mark current step done
+      db.prepare(
+        "UPDATE steps SET status = 'done', output = ?, updated_at = datetime('now') WHERE id = ?"
+      ).run(output, stepId);
 
-    // Skip intermediate steps
-    db.prepare(
-      "UPDATE steps SET status = 'skipped', updated_at = datetime('now') WHERE run_id = ? AND step_index > ? AND step_id != ? AND status = 'waiting'"
-    ).run(step.run_id, step.step_index, route.next_step);
-
-    // Set target step to pending
-    db.prepare(
-      "UPDATE steps SET status = 'pending', updated_at = datetime('now') WHERE run_id = ? AND step_id = ?"
-    ).run(step.run_id, route.next_step);
-
+      // Set target step to pending (advancePipeline is NOT called)
+      db.prepare(
+        "UPDATE steps SET status = 'pending', updated_at = datetime('now') WHERE run_id = ? AND step_id = ?"
+      ).run(runId, route.next_step);
+    });
+    routeForward();
     return { advanced: true, runCompleted: false };
   }
 
   if (route.retry_step) {
-    // Backward routing: go back to a previous step
-    const retryCount = (run.metadata?.decision_retry_count ?? 0) + 1;
-    const maxRetries = stepDef.max_retries ?? 3;
+    // Backward routing: reset target and intermediate steps
+    // Check retry budget on the TARGET step (use existing retry_count column)
+    const targetStep = db.prepare(
+      "SELECT id, retry_count, max_retries FROM steps WHERE run_id = ? AND step_id = ?"
+    ).get(runId, route.retry_step);
 
-    if (retryCount > maxRetries) {
-      // Exhausted — fail the run
-      db.prepare(
-        "UPDATE steps SET status = 'failed', output = ?, updated_at = datetime('now') WHERE id = ?"
-      ).run(`Decision retries exhausted (${maxRetries})`, stepId);
-      db.prepare(
-        "UPDATE runs SET status = 'failed', updated_at = datetime('now') WHERE id = ?"
-      ).run(step.run_id);
+    if (!targetStep) {
+      failStep(stepId, `retry_step target '${route.retry_step}' not found in run`);
       return { advanced: false, runCompleted: false };
     }
 
-    // Update retry counter in run metadata
-    const metadata = JSON.parse(run.metadata ?? '{}');
-    metadata.decision_retry_count = retryCount;
+    const maxRetries = stepDef.max_retries ?? 3;
+    if (targetStep.retry_count >= maxRetries) {
+      // Exhausted — fail the run
+      db.prepare(
+        "UPDATE steps SET status = 'failed', output = ?, updated_at = datetime('now') WHERE id = ?"
+      ).run(`Decision retries exhausted after ${maxRetries} attempts`, stepId);
+      db.prepare(
+        "UPDATE runs SET status = 'failed', updated_at = datetime('now') WHERE id = ?"
+      ).run(runId);
+      return { advanced: false, runCompleted: false };
+    }
 
-    // Mark current step done
-    db.prepare(
-      "UPDATE steps SET status = 'done', output = ?, updated_at = datetime('now') WHERE id = ?"
-    ).run(output, stepId);
+    const routeBackward = db.transaction(() => {
+      // Mark current step (review) as 'waiting' — NOT 'done'
+      // This ensures advancePipeline() will re-pick it when pipeline reaches it again
+      db.prepare(
+        "UPDATE steps SET status = 'waiting', output = ?, updated_at = datetime('now') WHERE id = ?"
+      ).run(output, stepId);
 
-    // Reset target step and all subsequent steps to waiting
-    db.prepare(
-      "UPDATE steps SET status = 'waiting', updated_at = datetime('now') WHERE run_id = ? AND step_index >= (SELECT step_index FROM steps WHERE run_id = ? AND step_id = ?) AND status IN ('done', 'skipped')"
-    ).run(step.run_id, step.run_id, route.retry_step);
+      // Reset all steps between target and current to 'waiting'
+      db.prepare(
+        "UPDATE steps SET status = 'waiting', updated_at = datetime('now') WHERE run_id = ? AND step_index > (SELECT step_index FROM steps WHERE run_id = ? AND step_id = ?) AND step_index < ? AND status = 'done'"
+      ).run(runId, runId, route.retry_step, stepIndex);
 
-    // Set target step to pending
-    db.prepare(
-      "UPDATE steps SET status = 'pending', updated_at = datetime('now') WHERE run_id = ? AND step_id = ?"
-    ).run(step.run_id, route.retry_step);
-
-    // Save metadata
-    db.prepare(
-      "UPDATE runs SET context = ?, updated_at = datetime('now') WHERE id = ?"
-    ).run(JSON.stringify({ ...context, __metadata: metadata }), step.run_id);
-
+      // Set target step to 'pending' and increment its retry_count
+      db.prepare(
+        "UPDATE steps SET status = 'pending', retry_count = retry_count + 1, updated_at = datetime('now') WHERE run_id = ? AND step_id = ?"
+      ).run(runId, route.retry_step);
+    });
+    routeBackward();
     return { advanced: true, runCompleted: false };
   }
+
+  // Route has neither next_step nor retry_step — invalid
+  failStep(stepId, `Route for decision '${decision}' has no next_step or retry_step`);
+  return { advanced: false, runCompleted: false };
+}
+```
+
+**Integration into `completeStep()`:**
+
+```typescript
+// In completeStep(), after parsing and merging outputs into context:
+// (existing code: parse KEY: value lines, merge into context, save context)
+
+const stepDef = getStepDefinition(step.run_id, step.step_id);
+if (stepDef?.decision_key) {
+  // Normalize to lowercase for case-insensitive lookup
+  const decisionKey = stepDef.decision_key.toLowerCase();
+  const decision = parsed[decisionKey]?.toLowerCase();
+
+  if (!decision) {
+    failStep(stepId, `Decision key '${stepDef.decision_key}' not found in step output`);
+    return { advanced: false, runCompleted: false };
+  }
+
+  return routeDecision(db, step.run_id, stepId, step.step_index, output, decision, stepDef);
 }
 
-// Existing linear behavior
+// Existing linear behavior: mark done, call advancePipeline()
 ```
 
 **Type changes in `types.ts`:**
@@ -503,7 +627,7 @@ interface WorkflowStep {
 }
 ```
 
-Note: `pass_outputs` is unnecessary since `completeStep()` already merges ALL outputs into global context. All outputs from the review step (including `ISSUES`) are automatically available to subsequent steps.
+Note: `pass_outputs` is unnecessary since `completeStep()` already merges ALL outputs into global context. All outputs from the review step (including `REVIEW_ISSUES`) are automatically available to subsequent steps.
 
 **Schema validation in `workflow-spec.ts`:**
 
@@ -515,10 +639,30 @@ if (step.decision_key) {
   }
   for (const [decision, route] of Object.entries(step.on_decision)) {
     if (route.next_step && !stepIds.includes(route.next_step)) {
-      throw new Error(`Step '${step.id}' on_decision.${decision}.next_step '${route.next_step}' not found`);
+      throw new Error(
+        `Step '${step.id}' on_decision.${decision}.next_step '${route.next_step}' not found`
+      );
     }
-    if (route.retry_step && !stepIds.includes(route.retry_step)) {
-      throw new Error(`Step '${step.id}' on_decision.${decision}.retry_step '${route.retry_step}' not found`);
+    if (route.retry_step) {
+      if (!stepIds.includes(route.retry_step)) {
+        throw new Error(
+          `Step '${step.id}' on_decision.${decision}.retry_step '${route.retry_step}' not found`
+        );
+      }
+      // Self-loop guard
+      if (route.retry_step === step.id) {
+        throw new Error(
+          `Step '${step.id}' on_decision.${decision}.retry_step cannot target itself (use on_fail for same-step retry)`
+        );
+      }
+      // Forward-loop guard: retry_step must be before current step
+      const targetIndex = stepIds.indexOf(route.retry_step);
+      const currentIndex = stepIds.indexOf(step.id);
+      if (targetIndex >= currentIndex) {
+        throw new Error(
+          `Step '${step.id}' on_decision.${decision}.retry_step '${route.retry_step}' must be before current step`
+        );
+      }
     }
   }
 }
@@ -526,7 +670,7 @@ if (step.decision_key) {
 
 **What this unlocks for compound-engineering-loop:**
 
-Full 3-way routing. The review step stays in workflow.yml as originally designed:
+Full 3-way routing. The review step in workflow.yml:
 
 ```yaml
 - id: review
@@ -543,68 +687,96 @@ Full 3-way routing. The review step stays in workflow.yml as originally designed
   max_retries: 3
 ```
 
-Review agent always outputs `STATUS: done` (matching `expects`), and `completeStep()` reads the `DECISION` output to determine routing.
+Review agent always outputs `STATUS: done` (matching `expects`), and `completeStep()` reads the `DECISION` output to determine routing. On backward routing, the review step is set to `waiting` (not `done`), so `advancePipeline()` will re-pick it when the pipeline loops back around.
+
+**Stale context handling (architecture-strategist):**
+When routing backward (e.g., rejected → brainstorm), the global context still contains stale values from the previous iteration (`plan_file`, `implementation_summary`, etc.). This is acceptable because:
+1. Each re-run step will overwrite its own output keys
+2. Agents are instructed to treat `{{review_issues}}` as the signal for retry behavior
+3. The stale values provide useful context about what was tried before
 
 **Files to modify in antfarm:**
+- [ ] `src/installer/step-ops.ts` — Add `getStepDefinition()` helper
+- [ ] `src/installer/step-ops.ts` — Add `routeDecision()` function
+- [ ] `src/installer/step-ops.ts` — Integrate decision routing into `completeStep()`
 - [ ] `src/installer/types.ts` — Add `decision_key` and `on_decision` to `WorkflowStep`
-- [ ] `src/installer/workflow-spec.ts` — Add validation for decision routing fields
-- [ ] `src/installer/step-ops.ts` — Add decision routing to `completeStep()`
-- [ ] `src/db.ts` — Add `metadata` column to `runs` table (or store in context)
+- [ ] `src/installer/workflow-spec.ts` — Add validation for decision routing fields (including self-loop and forward-loop guards)
 - [ ] Tests for all decision routing paths
 
 **Acceptance criteria:**
-- [ ] `DECISION: approved` routes review → compound (forward, linear)
-- [ ] `DECISION: needs_fixes` routes review → work (backward, with issues in context)
-- [ ] `DECISION: rejected` routes review → brainstorm (backward, with issues in context)
-- [ ] Retry counter increments on each backward route, shared across all decision paths
-- [ ] After 3 retries, run transitions to `failed` status
+- [ ] `DECISION: approved` routes review → compound (forward)
+- [ ] `DECISION: needs_fixes` routes review → work (backward, with review_issues in context)
+- [ ] `DECISION: rejected` routes review → brainstorm (backward, with review_issues in context)
+- [ ] Retry counter uses TARGET step's existing `retry_count` column (not a separate counter)
+- [ ] After `max_retries` exhausted, run transitions to `failed` status
 - [ ] Unknown DECISION values fail the step
+- [ ] Missing DECISION key fails the step
+- [ ] Case-insensitive decision matching (`Approved` = `approved` = `APPROVED`)
+- [ ] Self-loop validation rejects `retry_step` pointing to same step
+- [ ] Forward-loop validation rejects `retry_step` pointing to later step
+- [ ] All multi-statement routing uses `db.transaction()` with `BEGIN IMMEDIATE`
+- [ ] Review step set to `waiting` (not `done`) on backward routing
 - [ ] Linear pipelines (no `decision_key`) continue to work unchanged
 - [ ] Feature-dev and other existing workflows are unaffected
 
 ---
 
-### Track B.3: Add `required_outputs` validation in `completeStep()` (nice-to-have)
+#### ~~B.3: DROPPED — required_outputs validation~~
 
-Small addition to `completeStep()` — validate that required output keys are present before merging.
+**Why B.3 was removed (code-simplicity-reviewer):**
 
-```typescript
-// In completeStep(), after parsing output:
-if (stepDef?.required_outputs) {
-  const missing = stepDef.required_outputs.filter(
-    key => !(key.toLowerCase() in parsed)
-  );
-  if (missing.length > 0) {
-    return failStep(stepId, `Missing required outputs: ${missing.join(', ')}`);
-  }
-}
-```
+`required_outputs` validation is YAGNI. If an output is missing, the downstream step receives `[missing: key]` which is self-documenting. Adding validation at this layer:
+1. Adds code to maintain with no proven need
+2. Converts a recoverable situation (agent gets `[missing: key]` and can adapt) into a hard failure
+3. Can be added later if needed without breaking changes
 
-**Files to modify in antfarm:**
-- [ ] `src/installer/types.ts` — Add `required_outputs?: string[]` to `WorkflowStep`
-- [ ] `src/installer/step-ops.ts` — Add validation in `completeStep()`
+---
+
+## Security Considerations
+
+**Research Insights (security-sentinel):**
+
+Three HIGH-severity findings to address in Track B implementation:
+
+### S.1: Global Context Key Poisoning (HIGH)
+
+**Risk:** `completeStep()` merges ALL `KEY: value` output into global context with no filtering. A buggy or malicious agent could overwrite critical context keys like `task`, `repo`, or `branch`.
+
+**Mitigation (Track B):**
+- Add optional `output_keys` field to `WorkflowStep` type — when present, only listed keys are merged into context
+- In Track A, use prefixed key names (`review_issues` not `issues`) to reduce collision surface
+- Add workflow-spec validation that no two steps produce the same output key
+
+### S.2: Template Double-Expansion (MEDIUM)
+
+**Risk:** If an agent outputs a value containing `{{key}}` (e.g., `REVIEW_NOTES: Check the {{branch}} variable`), `resolveTemplate()` could expand it when processing a downstream step's input template.
+
+**Verification needed:** Confirm `resolveTemplate()` is single-pass only. If it runs recursively or is called multiple times on the same string, this is exploitable.
+
+**Current assessment:** Based on source code reading, `resolveTemplate()` uses a single `String.replace()` call, which is single-pass. But verify in tests.
+
+### S.3: Unified Retry Tracking (MEDIUM)
+
+**Risk (original plan):** The original B.2 plan had two retry counters — step-level `retry_count` (for same-step retry via `failStep()`) and `decision_retry_count` (for cross-step routing in run metadata). An agent could force same-step retries to bypass the decision retry limit.
+
+**Fix (incorporated):** Use the existing `retry_count` column on the TARGET step for all retry tracking. This creates a single, unified counter per step that tracks how many times it has been re-run regardless of the routing mechanism.
 
 ---
 
 ## Implementation Order
 
+**REVISED:** B.1 skipped, B.3 dropped. Two phases instead of four.
+
 ```
-IMMEDIATE (this repo, no antfarm changes):
+PHASE 1 — IMMEDIATE (this repo, no antfarm changes):
   A.1 → A.2 → A.3 → A.4 → A.5 → A.6
   Result: Linear pipeline runs on current antfarm
 
-PHASE 2 (antfarm PR — small, high-value):
-  B.1: Implement retry_step in failStep()
-  Result: 2-way routing (review → work retry loop)
-  Update workflow.yml: add on_fail: retry_step: work to review step
-
-PHASE 3 (antfarm PR — full routing):
-  B.2: Implement decision_key / on_decision
-  Result: 3-way routing (approved → compound, needs_fixes → work, rejected → brainstorm)
-  Update workflow.yml: restore full decision routing declarations
-
-OPTIONAL:
-  B.3: required_outputs validation
+PHASE 2 (antfarm PR — single PR with full routing):
+  B.2: Implement decision_key / on_decision in completeStep()
+  Prerequisites: getStepDefinition() helper, routeDecision() function
+  Result: Full 3-way routing (approved → compound, needs_fixes → work, rejected → brainstorm)
+  Then: Update workflow.yml in this repo to restore decision routing declarations
 ```
 
 ### Phase 1: Track A — Make It Run (this repo)
@@ -612,31 +784,27 @@ OPTIONAL:
 | # | Task | Files | Deps |
 |---|------|-------|------|
 | A.1 | Remove unsupported YAML fields | workflow.yml | None |
-| A.2 | Add polling config (1800s) | workflow.yml | None |
+| A.2 | Add polling config (1800s) + cron.interval_ms: 60000 | workflow.yml | None |
 | A.3 | Add repo/branch context | workflow.yml | None |
-| A.4 | Initialize template variables | workflow.yml | None |
+| A.4 | Initialize template variables (with key renames) | workflow.yml | None |
 | A.5 | Document git-based file sharing | agents/*/AGENTS.md | None |
-| A.6 | Adapt AGENTS.md for OpenClaw | agents/*/AGENTS.md | A.5 |
+| A.6a | Adapt brainstorm/AGENTS.md for OpenClaw | agents/brainstorm/AGENTS.md | A.5 |
+| A.6b | Adapt plan/AGENTS.md for OpenClaw | agents/plan/AGENTS.md | A.5 |
+| A.6c | Adapt work/AGENTS.md for OpenClaw (+ retry instructions) | agents/work/AGENTS.md | A.5 |
+| A.6d | Adapt review/AGENTS.md for OpenClaw (+ case sensitivity) | agents/review/AGENTS.md | A.5 |
+| A.6e | Adapt compound/AGENTS.md for OpenClaw (+ review context) | agents/compound/AGENTS.md | A.5 |
 
-### Phase 2: Track B.1 — 2-Way Routing (antfarm PR)
-
-| # | Task | Files | Deps |
-|---|------|-------|------|
-| B.1a | Implement retry_step in failStep() | step-ops.ts | None |
-| B.1b | Add getStepDefinition() helper | step-ops.ts | None |
-| B.1c | Update workflow.yml for 2-way | workflow.yml (this repo) | B.1a |
-| B.1d | Tests | step-ops.test.ts | B.1a |
-
-### Phase 3: Track B.2 — 3-Way Routing (antfarm PR)
+### Phase 2: Track B.2 — Full Decision Routing (antfarm PR)
 
 | # | Task | Files | Deps |
 |---|------|-------|------|
 | B.2a | Add types to WorkflowStep | types.ts | None |
-| B.2b | Add schema validation | workflow-spec.ts | B.2a |
-| B.2c | Implement decision routing in completeStep() | step-ops.ts | B.2a |
-| B.2d | Add retry counter to run metadata | step-ops.ts, db.ts | B.2c |
-| B.2e | Restore full routing in workflow.yml | workflow.yml (this repo) | B.2c |
-| B.2f | Tests | step-ops.test.ts | B.2c |
+| B.2b | Implement getStepDefinition() helper | step-ops.ts | None |
+| B.2c | Add schema validation (with loop guards) | workflow-spec.ts | B.2a |
+| B.2d | Implement routeDecision() function | step-ops.ts | B.2a, B.2b |
+| B.2e | Integrate decision routing into completeStep() | step-ops.ts | B.2d |
+| B.2f | Tests for all routing paths | step-ops.test.ts | B.2e |
+| B.2g | Restore full routing in workflow.yml | workflow.yml (this repo) | B.2e |
 
 ## Risk Analysis
 
@@ -644,9 +812,11 @@ OPTIONAL:
 |------|-----------|--------|------------|
 | OpenClaw agents can't run git commands | Medium | High | Verify before A.5/A.6. Feature-dev workflow uses git, so likely supported. |
 | Linear fallback produces unusable review output | Low | Medium | Review agent still outputs structured findings — just no automated re-work loop |
-| B.1 retry_step breaks existing antfarm workflows | Low | High | All existing workflows don't use retry_step (it was already declared but dead). Implementing it is additive. |
-| B.2 decision routing interacts badly with loop steps | Medium | Medium | Decision routing should only be allowed on non-loop steps. Add validation. |
-| Global context merge causes key collisions | Low | Medium | Use prefixed keys (e.g., `review_issues` not just `issues`) |
+| B.2 decision routing breaks existing workflows | Low | High | Only triggers when `decision_key` is set. All existing workflows have no `decision_key`. |
+| **Stale context confuses re-run agents** | **Medium** | **Medium** | **Agent instructions explicitly handle retry case (A.6). Stale keys are overwritten by re-run steps.** |
+| **Global context key poisoning** | **Low** | **High** | **Use prefixed keys (A.4). Add `output_keys` allowlisting in future Track B enhancement.** |
+| **SQLite transaction contention** | **Low** | **Medium** | **Use `BEGIN IMMEDIATE` in routeDecision(). Single cron thread minimizes contention.** |
+| **Case sensitivity in DECISION output** | **Medium** | **Medium** | **Normalize to lowercase in completeStep(). Add case note to review AGENTS.md.** |
 | `[missing: key]` appears in agent prompts despite A.4 | Low | Low | A.4 initializes all variables to empty. Only custom variables would show `[missing: ...]`. |
 
 ## Versioning
@@ -658,25 +828,35 @@ After Track A changes:
 
 ## Open Questions
 
+### Resolved by Research
+
+3. ~~**Should AGENTS.md files diverge from plugin commands?**~~ **RESOLVED (pattern-recognition-specialist):** Yes, divergence is necessary and intentional. Change AGENTS.md header to "OpenClaw version" and maintain both versions independently.
+
+4. ~~**Should `retry_step` (B.1) or `decision_key` (B.2) be prioritized?**~~ **RESOLVED (code-simplicity-reviewer):** Skip B.1 entirely. Go straight to B.2. B.1 has a critical bug (marking review as `done` breaks re-entry) and is semantically wrong (using failure to encode routing decisions).
+
+### Still Open
+
 1. **Can OpenClaw agents run git commands?** The feature-dev workflow's developer agent creates branches, commits, and pushes. If this works, git-based file sharing (A.5) is valid.
 
-2. **Does the antfarm team accept external PRs?** Track B requires changes to `snarktank/antfarm`. Check contribution guidelines.
-
-3. **Should AGENTS.md files diverge from plugin commands?** Currently AGENTS.md files are "synchronized from" plugin commands. For OpenClaw compatibility, they need to diverge. Consider maintaining two versions (AGENTS.md for antfarm, commands/*.md for Claude Code) or making AGENTS.md the authoritative source.
-
-4. **Should `retry_step` (B.1) or `decision_key` (B.2) be prioritized?** B.1 is simpler and gives 2-way routing. B.2 is the full solution. If the antfarm team is receptive, go straight to B.2. If uncertain, ship B.1 first as a smaller, more acceptable change.
+2. **Does the antfarm team accept external PRs?** Track B requires changes to `snarktank/antfarm`. Check contribution guidelines. Note: antfarm issue #109 documents the escalation gap, suggesting awareness of the limitation.
 
 5. **Does antfarm support per-step polling timeouts?** If yes, each agent could have an appropriate timeout instead of using the max (1800s) for all agents. Check `WorkflowStep` for a `timeoutSeconds` override.
+
+6. **(NEW) Should backward routing clear stale context keys?** When review routes back to brainstorm, `plan_file`, `implementation_summary`, etc. still contain values from the rejected iteration. Agents are instructed to handle this, but an explicit `clear_context` option on routes could prevent confusion.
+
+7. **(NEW) Should `escalate_to: human` use antfarm's webhook system?** The webhook system (`src/installer/webhooks.ts`) is functional and could power notifications. This would make `on_exhausted: escalate_to: human` actually work.
 
 ## References
 
 ### Antfarm Source (verified v0.5.1)
 - `src/installer/step-ops.ts` — `advancePipeline()`, `completeStep()`, `failStep()`, `resolveTemplate()`
-- `src/installer/types.ts` — `WorkflowStep`, `WorkflowStepFailure`, `WorkflowSpec`
+- `src/installer/types.ts` — `WorkflowStep`, `WorkflowStepFailure`, `WorkflowSpec`, `StepResult` (has `"retry"` status)
 - `src/installer/workflow-spec.ts` — `loadWorkflowSpec()`, `validateSteps()`
 - `src/installer/run.ts` — `runWorkflow()`
 - `src/installer/workspace-files.ts` — `writeWorkflowFile()`
 - `src/installer/agent-cron.ts` — `buildPollingPrompt()`, polling model resolution
+- `src/installer/webhooks.ts` — Webhook notification system (functional)
+- GitHub issue #109 — Documents escalation/routing gap
 
 ### Internal
 - `docs/plans/2026-02-15-refactor-fix-all-15-documented-plugin-issues-plan.md` — Previous plan (plugin quality)
@@ -684,3 +864,18 @@ After Track A changes:
 
 ### Feature-Dev Workflow (reference implementation)
 - `workflows/feature-dev/workflow.yml` — Uses `on_fail: retry_step: implement` (declared but not implemented in runtime)
+
+### Research Agents (deepening session, 2026-02-15)
+- architecture-strategist: Critical bug in B.1 status handling, routing extraction recommendation
+- security-sentinel: 3 HIGH findings (context poisoning, double-expansion, retry circumvention)
+- performance-oracle: PLAN_CONTENT removal (-30-40KB), cron.interval_ms, SQLite transactions
+- agent-native-reviewer: Case sensitivity, autonomous mode, retry instructions
+- code-simplicity-reviewer: Skip B.1, use retry_count, drop skipped status, drop B.3
+- kieran-typescript-reviewer: Missing transactions (BLOCKING), undefined getStepDefinition() (BLOCKING), metadata access pattern
+- spec-flow-analyzer: 8 flow gaps including work agent retry instructions, compound review context
+- pattern-recognition-specialist: Key renames, AGENTS.md divergence strategy, scaling ceiling acknowledgment
+- learnings-researcher ×3: Cross-referenced with 3 existing solution documents
+- orchestrating-swarms skill: Data contracts, file ownership, error handling tables
+- agent-native-architecture skill: Orchestrator-native vs agent-native assessment
+- document-review skill: Deliverable separation, A.6 sub-task split
+- best-practices-researcher ×2: Industry patterns (Temporal, Step Functions), antfarm issue #109, webhook system
