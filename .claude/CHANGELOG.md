@@ -5,6 +5,13 @@ All notable changes to the compound-engineering plugin will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.32.1] - 2026-02-15
+
+### Fixed
+
+- Trim 3 remaining skill descriptions that exceeded 200-char budget (rclone: 369→155, agent-browser: 340→148, agent-native-architecture: 248→145)
+- Broaden `.gitignore` env pattern from `.env` + `.env.local` + `.env.*.local` to `.env` + `.env.*` (covers `.env.test`, `.env.development`, etc.)
+
 ## [2.32.0] - 2026-02-15
 
 ### Fixed
