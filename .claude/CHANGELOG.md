@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **`document-review` skill** — Brainstorm and plan refinement through structured review ([@Trevin Chow](https://github.com/trevin))
-- **`/sync` command** — Sync Claude Code personal config across machines ([@Terry Li](https://github.com/terryli))
+- **`/sync` command** — Sync Claude Code personal config across machines ([@Terry Li](https://github.com/terryli)) *(Note: removed before vendoring)*
 
 ### Changed
 
