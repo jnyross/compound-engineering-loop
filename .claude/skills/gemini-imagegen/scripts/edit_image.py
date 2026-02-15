@@ -15,82 +15,9 @@ Environment:
 """
 
 import argparse
-import os
 import sys
 
-from PIL import Image
-from google import genai
-from google.genai import types
-
-
-def edit_image(
-    input_path: str,
-    instruction: str,
-    output_path: str,
-    model: str = "gemini-2.5-flash-image",
-    aspect_ratio: str | None = None,
-    image_size: str | None = None,
-) -> str | None:
-    """Edit an existing image based on text instructions.
-    
-    Args:
-        input_path: Path to the input image
-        instruction: Text description of edits to make
-        output_path: Path to save the edited image
-        model: Gemini model to use
-        aspect_ratio: Output aspect ratio
-        image_size: Output resolution
-    
-    Returns:
-        Any text response from the model, or None
-    """
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        raise EnvironmentError("GEMINI_API_KEY environment variable not set")
-    
-    if not os.path.exists(input_path):
-        raise FileNotFoundError(f"Input image not found: {input_path}")
-    
-    client = genai.Client(api_key=api_key)
-    
-    # Load input image
-    input_image = Image.open(input_path)
-    
-    # Build config
-    config_kwargs = {"response_modalities": ["TEXT", "IMAGE"]}
-    
-    image_config_kwargs = {}
-    if aspect_ratio:
-        image_config_kwargs["aspect_ratio"] = aspect_ratio
-    if image_size:
-        image_config_kwargs["image_size"] = image_size
-    
-    if image_config_kwargs:
-        config_kwargs["image_config"] = types.ImageConfig(**image_config_kwargs)
-    
-    config = types.GenerateContentConfig(**config_kwargs)
-    
-    response = client.models.generate_content(
-        model=model,
-        contents=[instruction, input_image],
-        config=config,
-    )
-    
-    text_response = None
-    image_saved = False
-    
-    for part in response.parts:
-        if part.text is not None:
-            text_response = part.text
-        elif part.inline_data is not None:
-            image = part.as_image()
-            image.save(output_path)
-            image_saved = True
-    
-    if not image_saved:
-        raise RuntimeError("No image was generated. Check your instruction and try again.")
-    
-    return text_response
+from gemini_images import GeminiImageGenerator
 
 
 def main():
@@ -118,23 +45,23 @@ def main():
         choices=["1K", "2K", "4K"],
         help="Output resolution"
     )
-    
+
     args = parser.parse_args()
-    
+
     try:
-        text = edit_image(
-            input_path=args.input,
+        gen = GeminiImageGenerator(model=args.model)
+        output, text = gen.edit(
+            input_image=args.input,
             instruction=args.instruction,
-            output_path=args.output,
-            model=args.model,
+            output=args.output,
             aspect_ratio=args.aspect,
             image_size=args.size,
         )
-        
-        print(f"Edited image saved to: {args.output}")
+
+        print(f"Edited image saved to: {output}")
         if text:
             print(f"Model response: {text}")
-            
+
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)

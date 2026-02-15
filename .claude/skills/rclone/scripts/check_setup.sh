@@ -1,7 +1,7 @@
 #!/bin/bash
 # rclone setup checker - verifies installation and configuration
 
-set -e
+set -euo pipefail
 
 echo "=== rclone Setup Check ==="
 echo

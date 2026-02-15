@@ -269,6 +269,13 @@ For detailed guidance, see:
 - [official-spec.md](references/official-spec.md) - Official skill specification
 - [best-practices.md](references/best-practices.md) - Skill authoring best practices
 
+## Scaffolding Scripts
+
+Python scripts for skill scaffolding and validation:
+- [init_skill.py](scripts/init_skill.py) - Initialize a new skill directory with SKILL.md template
+- [package_skill.py](scripts/package_skill.py) - Package a skill for distribution
+- [quick_validate.py](scripts/quick_validate.py) - Validate skill structure and frontmatter
+
 ## Sources
 
 - [Extend Claude with skills - Official Docs](https://code.claude.com/docs/en/skills)
