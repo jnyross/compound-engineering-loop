@@ -1,0 +1,9 @@
+{
+  "type": "module",
+  "scripts": {
+    "test": "node tests/compound-engineering-loop.test.ts"
+  },
+  "devDependencies": {
+    "yaml": "^2.4.5"
+  }
+}
