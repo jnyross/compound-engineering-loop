@@ -5,6 +5,36 @@ All notable changes to the compound-engineering plugin will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.33.0] - 2026-02-15
+
+### Changed
+
+- **workflow.yml** — Antfarm compatibility overhaul (Track A):
+  - Remove unsupported YAML fields: `decision_key`, `on_decision`, `on_exhausted`, `required_outputs`, `pass_outputs`
+  - Add `polling` config (1800s timeout) and `cron` interval (60s)
+  - Add `context` block initializing all template variables to empty strings
+  - Add `repo` and `branch` context variables for work agent
+  - Rename `issues` → `review_issues` to avoid global context key collision
+  - Remove `PLAN_CONTENT` from pipeline — agents read plan file from git instead (saves ~30-40KB in context)
+  - Add review context (`review_issues`, `review_notes`, `decision`) to compound step input
+  - Add routing intent comments documenting Track B design
+  - Bump workflow version to 2
+
+- **agents/\*/AGENTS.md** — Adapted all 5 agent prompts for OpenClaw compatibility:
+  - Change sync header to "OpenClaw version" (intentional divergence from Claude Code commands)
+  - Add "Shared Files" section for git-based file sharing between agents
+  - Remove Claude Code-only features: `TodoWrite`, `AskUserQuestion`, `skill:` loading, `Task subagent_type`, `/workflows:` commands, `agent-browser`, `git-worktree`, `rclone`
+  - Add retry-aware instructions (brainstorm: rejection context, work: fix-specific instructions)
+  - Add case sensitivity note for review DECISION output
+  - Add review context to compound agent input
+  - Convert parallel subagent operations to sequential steps
+
+### Summary
+
+- 29 agents, 24 commands, 17 skills, 1 MCP server
+
+---
+
 ## [2.32.2] - 2026-02-15
 
 ### Fixed
