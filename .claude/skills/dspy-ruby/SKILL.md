@@ -1,6 +1,6 @@
 ---
 name: dspy-ruby
-description: This skill should be used when working with DSPy.rb, a Ruby framework for building type-safe, composable LLM applications. Use this when implementing predictable AI features, creating LLM signatures and modules, configuring language model providers (OpenAI, Anthropic, Gemini, Ollama), building agent systems with tools, optimizing prompts, or testing LLM-powered functionality in Ruby applications.
+description: Build type-safe, composable LLM applications with DSPy.rb in Ruby. Use when implementing AI features, creating signatures/modules, configuring providers, or optimizing prompts.
 ---
 
 # DSPy.rb Expert

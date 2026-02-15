@@ -17,93 +17,9 @@ Environment:
 """
 
 import argparse
-import os
 import sys
 
-from PIL import Image
-from google import genai
-from google.genai import types
-
-
-def compose_images(
-    instruction: str,
-    output_path: str,
-    image_paths: list[str],
-    model: str = "gemini-3-pro-image-preview",
-    aspect_ratio: str | None = None,
-    image_size: str | None = None,
-) -> str | None:
-    """Compose multiple images based on instructions.
-    
-    Args:
-        instruction: Text description of how to combine images
-        output_path: Path to save the result
-        image_paths: List of input image paths (up to 14)
-        model: Gemini model to use (pro recommended)
-        aspect_ratio: Output aspect ratio
-        image_size: Output resolution
-    
-    Returns:
-        Any text response from the model, or None
-    """
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        raise EnvironmentError("GEMINI_API_KEY environment variable not set")
-    
-    if len(image_paths) > 14:
-        raise ValueError("Maximum 14 reference images supported")
-    
-    if len(image_paths) < 1:
-        raise ValueError("At least one image is required")
-    
-    # Verify all images exist
-    for path in image_paths:
-        if not os.path.exists(path):
-            raise FileNotFoundError(f"Image not found: {path}")
-    
-    client = genai.Client(api_key=api_key)
-    
-    # Load images
-    images = [Image.open(path) for path in image_paths]
-    
-    # Build contents: instruction first, then images
-    contents = [instruction] + images
-    
-    # Build config
-    config_kwargs = {"response_modalities": ["TEXT", "IMAGE"]}
-    
-    image_config_kwargs = {}
-    if aspect_ratio:
-        image_config_kwargs["aspect_ratio"] = aspect_ratio
-    if image_size:
-        image_config_kwargs["image_size"] = image_size
-    
-    if image_config_kwargs:
-        config_kwargs["image_config"] = types.ImageConfig(**image_config_kwargs)
-    
-    config = types.GenerateContentConfig(**config_kwargs)
-    
-    response = client.models.generate_content(
-        model=model,
-        contents=contents,
-        config=config,
-    )
-    
-    text_response = None
-    image_saved = False
-    
-    for part in response.parts:
-        if part.text is not None:
-            text_response = part.text
-        elif part.inline_data is not None:
-            image = part.as_image()
-            image.save(output_path)
-            image_saved = True
-    
-    if not image_saved:
-        raise RuntimeError("No image was generated.")
-    
-    return text_response
+from gemini_images import GeminiImageGenerator
 
 
 def main():
@@ -131,23 +47,23 @@ def main():
         choices=["1K", "2K", "4K"],
         help="Output resolution"
     )
-    
+
     args = parser.parse_args()
-    
+
     try:
-        text = compose_images(
+        gen = GeminiImageGenerator(model=args.model)
+        output, text = gen.compose(
             instruction=args.instruction,
-            output_path=args.output,
-            image_paths=args.images,
-            model=args.model,
+            images=args.images,
+            output=args.output,
             aspect_ratio=args.aspect,
             image_size=args.size,
         )
-        
-        print(f"Composed image saved to: {args.output}")
+
+        print(f"Composed image saved to: {output}")
         if text:
             print(f"Model response: {text}")
-            
+
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)

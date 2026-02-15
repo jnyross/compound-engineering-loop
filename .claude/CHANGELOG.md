@@ -5,12 +5,66 @@ All notable changes to the compound-engineering plugin will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.32.2] - 2026-02-15
+
+### Fixed
+
+- Remove phantom agent references (`rails-console-explorer`, `appsignal-log-investigator`) from `reproduce-bug.md`
+- Fix stale `skill-creator` path in `compound-docs` skill — now points to `create-agent-skills/scripts/init_skill.py`
+- Fix README command name `/xcode-test` → `/test-xcode` to match actual `name:` field
+- Fix phantom `linting-agent` references in `work.md` → `lint` (actual agent name)
+- Remove non-existent `imgup` skill reference from `work.md`
+
+## [2.32.1] - 2026-02-15
+
+### Fixed
+
+- Trim 3 remaining skill descriptions that exceeded 200-char budget (rclone: 369→155, agent-browser: 340→148, agent-native-architecture: 248→145)
+- Broaden `.gitignore` env pattern from `.env` + `.env.local` + `.env.*.local` to `.env` + `.env.*` (covers `.env.test`, `.env.development`, etc.)
+
+## [2.32.0] - 2026-02-15
+
+### Fixed
+
+- **Phase 1: Critical Runtime Fixes**
+  - Remove 5 phantom agent references (`dependency-detective`, `code-philosopher`, `devops-harmony-analyst`, `rails-turbo-expert`, `cora-test-reviewer`) from workflow commands
+  - Fix review agent STATUS output — `STATUS: retry` → `STATUS: done` (DECISION field controls routing, not STATUS)
+  - Rewrite `/lfg` and `/slfg` to remove external dependencies (`ralph-wiggum:ralph-loop`, `compound-engineering:` prefixes), add retry logic and compound step
+  - Reduce `max_retries` from 50 to 3 in workflow.yml (caps autonomous execution at ~4 hours)
+  - Fix README component counts (Commands 25→24, Skills 16→17) and add missing table entries
+
+- **Phase 2: Reliability & Security**
+  - Add sync comments to all 5 `agents/*/AGENTS.md` files establishing `.claude/commands/workflows/` as authoritative source
+  - Add `ANTFARM_MODE` detection to brainstorm, plan, and work commands (interactive/autonomous modes)
+  - Replace `curl | sudo bash` in rclone skill with package manager instructions
+  - Add `.gitignore` with Python, credential, OS, IDE, and dependency patterns
+  - Add `needs_fixes` three-state review decision path (approved → compound, needs_fixes → work, rejected → brainstorm)
+
+- **Phase 3: Quality & Consistency**
+  - Consolidate `skill-creator` into `create-agent-skills` (migrated 3 scaffolding scripts, deleted duplicate)
+  - Fix `resolve-pr-parallel` skill name from snake_case to kebab-case
+  - Harden shell scripts with `set -euo pipefail`
+  - Optimize context window budget — trim all auto-loading skill descriptions to <200 chars
+  - Add `disable-model-invocation: true` to `git-worktree` skill
+  - Fix `learnings-researcher` agent model from `haiku` to `inherit`
+  - Deduplicate Gemini Python scripts — refactored 4 CLI scripts to import from shared `gemini_images.py` library
+
+### Removed
+
+- **`skill-creator` skill** — Consolidated into `create-agent-skills`
+
+### Summary
+
+- 29 agents, 24 commands, 17 skills, 1 MCP server
+
+---
+
 ## [2.31.0] - 2026-02-08
 
 ### Added
 
 - **`document-review` skill** — Brainstorm and plan refinement through structured review ([@Trevin Chow](https://github.com/trevin))
-- **`/sync` command** — Sync Claude Code personal config across machines ([@Terry Li](https://github.com/terryli))
+- **`/sync` command** — Sync Claude Code personal config across machines ([@Terry Li](https://github.com/terryli)) *(Note: removed before vendoring)*
 
 ### Changed
 

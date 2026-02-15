@@ -1,6 +1,6 @@
 ---
 name: document-review
-description: This skill should be used to refine brainstorm or plan documents before proceeding to the next workflow step. It applies when a brainstorm or plan document exists and the user wants to improve it.
+description: Refine brainstorm or plan documents through structured self-review. Use when a document needs improvement before the next workflow step.
 ---
 
 # Document Review

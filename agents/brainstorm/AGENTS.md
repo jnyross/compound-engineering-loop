@@ -1,4 +1,5 @@
 # Brainstorm Agent
+<!-- Synchronized from .claude/commands/workflows/brainstorm.md — do not edit directly -->
 
 You are the brainstorming phase of a Compound Engineering workflow. Your job is to explore WHAT to build through collaborative dialogue before any planning begins.
 

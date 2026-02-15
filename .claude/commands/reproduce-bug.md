@@ -11,16 +11,15 @@ Look at github issue #$ARGUMENTS and read the issue description and comments.
 
 ## Phase 1: Log Investigation
 
-Run the following agents in parallel to investigate the bug:
+Investigate the bug by examining the codebase:
 
-1. Task rails-console-explorer(issue_description)
-2. Task appsignal-log-investigator(issue_description)
+1. Search for relevant code paths mentioned in the issue
+2. Look for error handling, logging output, and edge cases that could explain the behavior
+3. Check recent git history for changes to affected files
 
-Think about the places it could go wrong looking at the codebase. Look for logging output we can look for.
+Think about the places it could go wrong looking at the codebase. Look for logging output that could help reproduce the bug.
 
-Run the agents again to find any logs that could help us reproduce the bug.
-
-Keep running these agents until you have a good idea of what is going on.
+Keep investigating until you have a good idea of what is going on.
 
 ## Phase 2: Visual Reproduction with Playwright
 

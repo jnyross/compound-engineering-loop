@@ -12,6 +12,17 @@ argument-hint: "[feature description, bug report, or improvement idea]"
 
 Transform feature descriptions, bug reports, or improvement ideas into well-structured markdown files issues that follow project conventions and best practices. This command provides flexible detail levels to match your needs.
 
+## Mode Detection
+
+Check `ANTFARM_MODE` environment variable (default: `interactive`).
+
+| Mode | Behavior |
+|------|----------|
+| `interactive` (default) | Pause for human input at decision gates using AskUserQuestion |
+| `autonomous` | Skip AskUserQuestion calls, auto-select recommended options, produce output directly |
+
+When `ANTFARM_MODE=autonomous`: skip post-generation menu (AskUserQuestion), skip idea refinement questions, auto-select STANDARD detail level, and produce the plan directly.
+
 ## Feature Description
 
 <feature_description> #$ARGUMENTS </feature_description>

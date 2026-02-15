@@ -1,7 +1,7 @@
 id: compound-engineering-loop
 name: Compound Engineering Loop
 version: 1
-description: "Rigorous plan→execute→review cycle based on Compound Engineering principles. 80% of effort goes to planning and review, 20% in execution. Each cycle compounds: plans inform future plans, reviews catch more issues, patterns get documented."
+description: "Rigorous plan→execute→review cycle based on Compound Engineering principles. 80% of effort goes to planning and review, 20% in execution. Each cycle compounds: plans inform future plans, reviews catch more issues, patterns get documented. Set ANTFARM_MODE=autonomous for unattended execution (used by lfg/slfg)."
 
 agents:
   - id: brainstorm
@@ -132,7 +132,10 @@ steps:
       
       PLAN SUMMARY:
       {{plan_summary}}
-      
+
+      REVIEW ISSUES (if retrying from review):
+      {{issues}}
+
       Instructions:
       1. Read the plan completely and clarify any ambiguities
       2. Set up environment (check branch, create worktree if needed)
@@ -198,8 +201,13 @@ steps:
       DECISION: approved
       STATUS: done
       
-      If issues found:
-      ISSUES: detailed list with file/line references and WHY each failed
+      If minor issues found (localized fixes, specific files/lines):
+      ISSUES: detailed list of fixes needed with file:line references
+      DECISION: needs_fixes
+      STATUS: done
+
+      If fundamental issues (rethink approach, architectural problems):
+      ISSUES: detailed list with WHY each failed
       DECISION: rejected
       STATUS: done
     expects: "STATUS: done"
@@ -207,10 +215,14 @@ steps:
     on_decision:
       approved:
         next_step: compound
+      needs_fixes:
+        retry_step: work
+        pass_outputs: [issues]
       rejected:
         retry_step: brainstorm
         pass_outputs: [issues]
-    max_retries: 50
+    # SAFETY: All retry paths share this counter. Do not add independent counters.
+    max_retries: 3
     on_exhausted:
       escalate_to: human
 

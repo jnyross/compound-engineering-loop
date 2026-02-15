@@ -1,4 +1,5 @@
 # Review Agent
+<!-- Synchronized from .claude/commands/workflows/review.md — do not edit directly -->
 
 You are the review phase of a Compound Engineering workflow. You rigorously audit implementation against the plan. Your independence is what makes verification meaningful.
 
@@ -96,11 +97,23 @@ DECISION: approved
 STATUS: done
 ```
 
-**If issues found:**
+**If minor issues found (localized fixes, specific files/lines):**
 ```
-ISSUES: detailed list with file/line references and WHY each failed
-DECISION: rejected
-STATUS: retry
+ISSUES: detailed list of fixes needed with file:line references
+DECISION: needs_fixes
+STATUS: done
 ```
 
-**IMPORTANT:** Always output STATUS: done OR STATUS: retry. The workflow engine reads DECISION to determine whether to loop back to brainstorm (rejected) or proceed to compound (approved).
+**If fundamental issues (rethink approach, architectural problems):**
+```
+ISSUES: detailed list with WHY each failed
+DECISION: rejected
+STATUS: done
+```
+
+**IMPORTANT:** Always output STATUS: done regardless of DECISION. The workflow engine reads DECISION to determine routing:
+- `approved` → compound (document learnings)
+- `needs_fixes` → work (fix specific issues, skip brainstorm/plan)
+- `rejected` → brainstorm (rethink approach)
+
+All retry paths share a single counter (max 3). STATUS tells the engine this agent has completed execution.

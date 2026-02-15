@@ -96,14 +96,14 @@ These 5 fixes unblock autonomous workflow execution. Each is independent and can
 **Solution:** Remove the 5 phantom references from the parallel agent list. The remaining 9 agents (kieran-rails-reviewer, dhh-rails-reviewer, git-history-analyzer, pattern-recognition-specialist, architecture-strategist, security-sentinel, performance-oracle, data-integrity-guardian, agent-native-reviewer) provide comprehensive coverage.
 
 **Files:**
-- [ ] `.claude/commands/workflows/review.md` — Remove phantom agent entries from parallel agent list. Remove the conditional turbo check that referenced the non-existent `rails-turbo-expert`.
-- [ ] `.claude/commands/workflows/compound.md` — Remove `cora-test-reviewer` reference
-- [ ] `.claude/commands/workflows/work.md` — Check for and remove any `cora-test-reviewer` reference (pattern-recognition-specialist found one at line 184)
+- [x] `.claude/commands/workflows/review.md` — Remove phantom agent entries from parallel agent list. Remove the conditional turbo check that referenced the non-existent `rails-turbo-expert`.
+- [x] `.claude/commands/workflows/compound.md` — Remove `cora-test-reviewer` reference
+- [x] `.claude/commands/workflows/work.md` — Check for and remove any `cora-test-reviewer` reference (pattern-recognition-specialist found one at line 184)
 
 **Acceptance criteria:**
-- [ ] No agent references in commands that don't resolve to actual `.claude/agents/` files
-- [ ] Review workflow runs without agent-not-found errors
-- [ ] Renumber the parallel agent list after removals
+- [x] No agent references in commands that don't resolve to actual `.claude/agents/` files
+- [x] Review workflow runs without agent-not-found errors
+- [x] Renumber the parallel agent list after removals
 
 ### Research Insights: Phantom Agents
 
@@ -122,11 +122,11 @@ These 5 fixes unblock autonomous workflow execution. Each is independent and can
 **Solution:** Change `STATUS: retry` to `STATUS: done` in the review agent.
 
 **Files:**
-- [ ] `agents/review/AGENTS.md` — Line 104: change `STATUS: retry` to `STATUS: done`
+- [x] `agents/review/AGENTS.md` — Line 104: change `STATUS: retry` to `STATUS: done`
 
 **Acceptance criteria:**
-- [ ] Review agent always outputs `STATUS: done` regardless of DECISION value
-- [ ] `workflow.yml` `expects: "STATUS: done"` is satisfied by all review outcomes
+- [x] Review agent always outputs `STATUS: done` regardless of DECISION value
+- [x] `workflow.yml` `expects: "STATUS: done"` is satisfied by all review outcomes
 
 ### Research Insights: STATUS/DECISION Pattern
 
@@ -143,8 +143,8 @@ These 5 fixes unblock autonomous workflow execution. Each is independent and can
 **Solution:** Rewrite both commands to use local workflow commands directly with proper failure handling and the compound step.
 
 **Files:**
-- [ ] `.claude/commands/lfg.md` — Replace external plugin references with direct invocations (see revised pipeline below)
-- [ ] `.claude/commands/slfg.md` — Same rewrite but using swarm mode for parallel execution where applicable
+- [x] `.claude/commands/lfg.md` — Replace external plugin references with direct invocations (see revised pipeline below)
+- [x] `.claude/commands/slfg.md` — Same rewrite but using swarm mode for parallel execution where applicable
 
 **Revised pipeline (from agent-native-reviewer):**
 ```
@@ -161,11 +161,11 @@ These 5 fixes unblock autonomous workflow execution. Each is independent and can
 ```
 
 **Acceptance criteria:**
-- [ ] `/lfg` and `/slfg` execute without external plugin dependencies
-- [ ] No `ralph-wiggum:` or `compound-engineering:` prefixes remain
-- [ ] Both commands complete the full plan-to-compound pipeline
-- [ ] Failure at any step produces a clear error message, not a silent hang
-- [ ] Compound step (step 5) is included — this was missing from the original plan
+- [x] `/lfg` and `/slfg` execute without external plugin dependencies
+- [x] No `ralph-wiggum:` or `compound-engineering:` prefixes remain
+- [x] Both commands complete the full plan-to-compound pipeline
+- [x] Failure at any step produces a clear error message, not a silent hang
+- [x] Compound step (step 5) is included — this was missing from the original plan
 
 ### Research Insights: lfg/slfg Rewrite
 
@@ -190,12 +190,12 @@ These 5 fixes unblock autonomous workflow execution. Each is independent and can
 **Solution:** Reduce to 3 retries. After 3 failed review cycles, escalate to human.
 
 **Files:**
-- [ ] `workflow.yml` — Line 213: change `max_retries: 50` to `max_retries: 3`
+- [x] `workflow.yml` — Line 213: change `max_retries: 50` to `max_retries: 3`
 
 **Acceptance criteria:**
-- [ ] max_retries is 3
-- [ ] `on_exhausted: escalate_to: human` still present
-- [ ] All retry paths (approved, needs_fixes, rejected) share this single counter
+- [x] max_retries is 3
+- [x] `on_exhausted: escalate_to: human` still present
+- [x] All retry paths (approved, needs_fixes, rejected) share this single counter
 
 ### Research Insights: Retry Limits
 
@@ -216,18 +216,18 @@ These 5 fixes unblock autonomous workflow execution. Each is independent and can
 **Solution:** Correct all counts and tables. Verify every entry against filesystem reality.
 
 **Files:**
-- [ ] `.claude/README.md` — Fix component counts table to match actual filesystem
-- [ ] `.claude/README.md` — Add `resolve-pr-parallel` to skills table under "Content & Workflow"
-- [ ] `.claude/README.md` — Add `/agent-native-audit` to utility commands table (missing, found by pattern-recognition-specialist)
-- [ ] `.claude/README.md` — Verify all command and skill table entries against actual files
-- [ ] `.claude/CHANGELOG.md` — Line 13: Remove `/sync` command entry or note it was removed before vendoring
+- [x] `.claude/README.md` — Fix component counts table to match actual filesystem
+- [x] `.claude/README.md` — Add `resolve-pr-parallel` to skills table under "Content & Workflow"
+- [x] `.claude/README.md` — Add `/agent-native-audit` to utility commands table (missing, found by pattern-recognition-specialist)
+- [x] `.claude/README.md` — Verify all command and skill table entries against actual files
+- [x] `.claude/CHANGELOG.md` — Line 13: Remove `/sync` command entry or note it was removed before vendoring
 
 **Acceptance criteria:**
-- [ ] README component counts match actual file counts on disk
-- [ ] README component counts match plugin.json description
-- [ ] All skills listed in README skill tables
-- [ ] All commands listed in README command tables
-- [ ] No references to non-existent commands in CHANGELOG
+- [x] README component counts match actual file counts on disk
+- [x] README component counts match plugin.json description
+- [x] All skills listed in README skill tables
+- [x] All commands listed in README command tables
+- [x] No references to non-existent commands in CHANGELOG
 
 ### Research Insights: Documentation Accuracy
 
@@ -285,18 +285,18 @@ These fixes improve autonomy, security, and architecture. Some depend on Phase 1
 4. Add a validation step to the pre-commit checklist: verify AGENTS.md content matches plugin commands
 
 **Files:**
-- [ ] `agents/brainstorm/AGENTS.md` — Synchronize with `.claude/commands/workflows/brainstorm.md`, remove divergent content, add sync comment
-- [ ] `agents/plan/AGENTS.md` — Same
-- [ ] `agents/work/AGENTS.md` — Same
-- [ ] `agents/review/AGENTS.md` — Same, ensure STATUS: done on all outcomes
-- [ ] `agents/compound/AGENTS.md` — Same
+- [x] `agents/brainstorm/AGENTS.md` — Synchronize with `.claude/commands/workflows/brainstorm.md`, remove divergent content, add sync comment
+- [x] `agents/plan/AGENTS.md` — Same
+- [x] `agents/work/AGENTS.md` — Same
+- [x] `agents/review/AGENTS.md` — Same, ensure STATUS: done on all outcomes
+- [x] `agents/compound/AGENTS.md` — Same
 
 **Acceptance criteria:**
-- [ ] Single source of truth: plugin commands are authoritative, AGENTS.md mirrors them
-- [ ] No content divergence between root agents and plugin commands
-- [ ] `workflow.yml` still functions correctly
-- [ ] Each AGENTS.md has sync comment at top
-- [ ] Agent context size remains at ~15K (no regression)
+- [x] Single source of truth: plugin commands are authoritative, AGENTS.md mirrors them
+- [x] No content divergence between root agents and plugin commands
+- [x] `workflow.yml` still functions correctly
+- [x] Each AGENTS.md has sync comment at top
+- [x] Agent context size remains at ~15K (no regression)
 
 ---
 
@@ -327,9 +327,9 @@ export ANTFARM_MODE="autonomous"  # Set by lfg/slfg at pipeline start
 | `autonomous` | Auto-proceed on everything within retry limits | `lfg`, `slfg`, workflow.yml |
 
 **Files:**
-- [ ] `.claude/commands/lfg.md` — Set `ANTFARM_MODE=autonomous` at pipeline start
-- [ ] `.claude/commands/slfg.md` — Same
-- [ ] `.claude/commands/workflows/brainstorm.md` — Add mode detection section:
+- [x] `.claude/commands/lfg.md` — Set `ANTFARM_MODE=autonomous` at pipeline start
+- [x] `.claude/commands/slfg.md` — Same
+- [x] `.claude/commands/workflows/brainstorm.md` — Add mode detection section:
   ```markdown
   ## Mode Detection
 
@@ -337,15 +337,15 @@ export ANTFARM_MODE="autonomous"  # Set by lfg/slfg at pipeline start
   If autonomous: skip AskUserQuestion calls, produce output directly.
   If interactive: use full collaborative dialogue flow.
   ```
-- [ ] `.claude/commands/workflows/plan.md` — Add similar mode detection for post-generation menu
-- [ ] `.claude/commands/workflows/work.md` — Add similar mode detection for approval gates
-- [ ] `workflow.yml` — Document ANTFARM_MODE in the workflow description or step inputs
+- [x] `.claude/commands/workflows/plan.md` — Add similar mode detection for post-generation menu
+- [x] `.claude/commands/workflows/work.md` — Add similar mode detection for approval gates
+- [x] `workflow.yml` — Document ANTFARM_MODE in the workflow description or step inputs
 
 **Acceptance criteria:**
-- [ ] Review rejection -> brainstorm loop completes without human intervention when ANTFARM_MODE=autonomous
-- [ ] Standalone `/workflows:brainstorm` retains interactive behavior (ANTFARM_MODE defaults to interactive)
-- [ ] Mode detection uses explicit env var, not input-field heuristics
-- [ ] lfg/slfg set the env var before invoking workflow steps
+- [x] Review rejection -> brainstorm loop completes without human intervention when ANTFARM_MODE=autonomous
+- [x] Standalone `/workflows:brainstorm` retains interactive behavior (ANTFARM_MODE defaults to interactive)
+- [x] Mode detection uses explicit env var, not input-field heuristics
+- [x] lfg/slfg set the env var before invoking workflow steps
 
 ---
 
@@ -356,8 +356,8 @@ export ANTFARM_MODE="autonomous"  # Set by lfg/slfg at pipeline start
 **Solution:** Replace with package manager installation as primary recommendation.
 
 **Files:**
-- [ ] `.claude/skills/rclone/scripts/check_setup.sh` — Line 19: Replace curl command with package manager instructions
-- [ ] `.claude/skills/rclone/SKILL.md` — Line 29: Same replacement
+- [x] `.claude/skills/rclone/scripts/check_setup.sh` — Line 19: Replace curl command with package manager instructions
+- [x] `.claude/skills/rclone/SKILL.md` — Line 29: Same replacement
 
 **Replacement text:**
 ```bash
@@ -371,9 +371,9 @@ echo "For the latest version, download from https://rclone.org/downloads/"
 ```
 
 **Acceptance criteria:**
-- [ ] No `curl | bash` or `curl | sudo bash` patterns in any file
-- [ ] Package manager installation is the primary recommendation
-- [ ] Fallback is a download link, not piped execution
+- [x] No `curl | bash` or `curl | sudo bash` patterns in any file
+- [x] Package manager installation is the primary recommendation
+- [x] Fallback is a download link, not piped execution
 
 ### Research Insights: Package Manager Security
 
@@ -388,7 +388,7 @@ echo "For the latest version, download from https://rclone.org/downloads/"
 **Solution:** Create a standard `.gitignore` covering project languages and credential files.
 
 **Files:**
-- [ ] `.gitignore` — Create with expanded coverage:
+- [x] `.gitignore` — Create with expanded coverage:
 
 ```gitignore
 # Python
@@ -431,9 +431,9 @@ node_modules/
 ```
 
 **Acceptance criteria:**
-- [ ] `.gitignore` covers `__pycache__/`, `*.pyc`, `venv/`, `.env`, `.DS_Store`, `*.log`
-- [ ] `.gitignore` covers credential files (`*.pem`, `*.key`, `rclone.conf`, `credentials.json`)
-- [ ] No existing tracked files are affected (verify with `git status` after creation)
+- [x] `.gitignore` covers `__pycache__/`, `*.pyc`, `venv/`, `.env`, `.DS_Store`, `*.log`
+- [x] `.gitignore` covers credential files (`*.pem`, `*.key`, `rclone.conf`, `credentials.json`)
+- [x] No existing tracked files are affected (verify with `git status` after creation)
 
 ### Research Insights: Credential Protection
 
@@ -468,7 +468,7 @@ For this plan, implement 3 states (approved, needs_fixes, rejected) as the minim
 **From agent-native-reviewer:** The heuristic "P2/P3 only = needs_fixes, P1 = rejected" is too simplistic. A better heuristic is scope-of-required-change: if the fix is localized to specific files/lines → needs_fixes. If the fix requires rethinking the approach → rejected.
 
 **Files:**
-- [ ] `workflow.yml` — Add third decision path AND update work step input:
+- [x] `workflow.yml` — Add third decision path AND update work step input:
   ```yaml
   # In the work step input, add:
   REVIEW ISSUES (if retrying from review):
@@ -485,7 +485,7 @@ For this plan, implement 3 states (approved, needs_fixes, rejected) as the minim
       retry_step: brainstorm
       pass_outputs: [issues]
   ```
-- [ ] `.claude/commands/workflows/review.md` — Update output section with three-state decision:
+- [x] `.claude/commands/workflows/review.md` — Update output section with three-state decision:
   ```markdown
   If approved:
   DECISION: approved
@@ -498,7 +498,7 @@ For this plan, implement 3 states (approved, needs_fixes, rejected) as the minim
   ISSUES: detailed list with WHY each failed
   DECISION: rejected
   ```
-- [ ] `.claude/commands/workflows/work.md` — Add section for handling incoming issues:
+- [x] `.claude/commands/workflows/work.md` — Add section for handling incoming issues:
   ```markdown
   ## Fix Mode (when REVIEW ISSUES is non-empty)
 
@@ -511,11 +511,11 @@ For this plan, implement 3 states (approved, needs_fixes, rejected) as the minim
   ```
 
 **Acceptance criteria:**
-- [ ] Review can route minor fixes directly to work phase (skipping brainstorm/plan)
-- [ ] Only fundamental issues loop back to brainstorm
-- [ ] Work step's input template includes `{{issues}}` variable
-- [ ] Work command has "fix mode" behavioral instructions
-- [ ] All retry paths share the single `max_retries: 3` counter (add YAML comment)
+- [x] Review can route minor fixes directly to work phase (skipping brainstorm/plan)
+- [x] Only fundamental issues loop back to brainstorm
+- [x] Work step's input template includes `{{issues}}` variable
+- [x] Work command has "fix mode" behavioral instructions
+- [x] All retry paths share the single `max_retries: 3` counter (add YAML comment)
 
 ---
 
@@ -530,15 +530,15 @@ These improvements are independently valuable. No hard dependencies on Phase 1/2
 **Solution:** Keep `create-agent-skills` as the primary skill. Migrate the 3 unique Python scripts from `skill-creator`. Remove `skill-creator/`.
 
 **Files:**
-- [ ] `.claude/skills/skill-creator/scripts/` — Migrate `init_skill.py`, `package_skill.py`, `quick_validate.py` to `create-agent-skills/scripts/`
-- [ ] `.claude/skills/create-agent-skills/SKILL.md` — Add references to migrated scripts
-- [ ] `.claude/skills/skill-creator/` — Delete entire directory
-- [ ] `.claude/README.md` — Remove `skill-creator` from skills table, update count
+- [x] `.claude/skills/skill-creator/scripts/` — Migrate `init_skill.py`, `package_skill.py`, `quick_validate.py` to `create-agent-skills/scripts/`
+- [x] `.claude/skills/create-agent-skills/SKILL.md` — Add references to migrated scripts
+- [x] `.claude/skills/skill-creator/` — Delete entire directory
+- [x] `.claude/README.md` — Remove `skill-creator` from skills table, update count
 
 **Acceptance criteria:**
-- [ ] Single skill for skill creation (`create-agent-skills`)
-- [ ] All 3 scaffolding scripts preserved in `create-agent-skills/scripts/`
-- [ ] No unique functionality lost
+- [x] Single skill for skill creation (`create-agent-skills`)
+- [x] All 3 scaffolding scripts preserved in `create-agent-skills/scripts/`
+- [x] No unique functionality lost
 
 ### Research Insights: Skill Consolidation
 
@@ -561,11 +561,11 @@ These improvements are independently valuable. No hard dependencies on Phase 1/2
 **From pattern-recognition-specialist:** Found 13 cross-references that would need updating for the 4 renames. The risk-reward ratio is poor for a P3 cosmetic issue.
 
 **Files:**
-- [ ] `.claude/skills/resolve-pr-parallel/SKILL.md` — Change `name: resolve_pr_parallel` to `name: resolve-pr-parallel`
+- [x] `.claude/skills/resolve-pr-parallel/SKILL.md` — Change `name: resolve_pr_parallel` to `name: resolve-pr-parallel`
 
 **Acceptance criteria:**
-- [ ] Skill `name:` field matches directory name (lowercase-with-hyphens)
-- [ ] Command files left as-is (documenting the inconsistency is acceptable)
+- [x] Skill `name:` field matches directory name (lowercase-with-hyphens)
+- [x] Command files left as-is (documenting the inconsistency is acceptable)
 
 ---
 
@@ -604,7 +604,7 @@ validate_branch_name() {
 ```
 
 **Files:**
-- [ ] `.claude/skills/git-worktree/scripts/worktree-manager.sh`:
+- [x] `.claude/skills/git-worktree/scripts/worktree-manager.sh`:
   - Replace `set -e` with `set -euo pipefail`
   - Add `trap 'echo "Error on line $LINENO, exit code $?" >&2' ERR`
   - Add `validate_branch_name` function (above)
@@ -612,17 +612,17 @@ validate_branch_name() {
   - Use `--` before positional args in all git commands
   - Add `realpath -m` containment for worktree paths
   - Add `.env` cleanup before worktree removal
-- [ ] `.claude/skills/rclone/scripts/check_setup.sh` — Add `set -euo pipefail` + ERR trap
-- [ ] `.claude/skills/resolve-pr-parallel/scripts/get-pr-comments` — Add `set -euo pipefail`, add `.sh` extension, add input validation for `PR_NUMBER` and `OWNER/REPO`
-- [ ] `.claude/skills/resolve-pr-parallel/scripts/resolve-pr-thread` — Same
+- [x] `.claude/skills/rclone/scripts/check_setup.sh` — Add `set -euo pipefail` + ERR trap
+- [x] `.claude/skills/resolve-pr-parallel/scripts/get-pr-comments` — Add `set -euo pipefail`, add `.sh` extension, add input validation for `PR_NUMBER` and `OWNER/REPO`
+- [x] `.claude/skills/resolve-pr-parallel/scripts/resolve-pr-thread` — Same
 
 **Acceptance criteria:**
-- [ ] All shell scripts use `set -euo pipefail` + ERR trap
-- [ ] Branch names validated with tightened regex (must start alphanumeric, block `..`, block `.lock`, max length)
-- [ ] Both `$branch` and `$from_branch` validated
-- [ ] Git commands use `--` before positional arguments
-- [ ] `.env` files cleaned up on worktree removal
-- [ ] Worktree paths validated with `realpath -m` containment
+- [x] All shell scripts use `set -euo pipefail` + ERR trap
+- [x] Branch names validated with tightened regex (must start alphanumeric, block `..`, block `.lock`, max length)
+- [x] Both `$branch` and `$from_branch` validated
+- [x] Git commands use `--` before positional arguments
+- [x] `.env` files cleaned up on worktree removal
+- [x] Worktree paths validated with `realpath -m` containment
 
 ---
 
@@ -641,17 +641,17 @@ validate_branch_name() {
 **From performance-oracle:** Removing `skill-creator` (Issue 011) saves zero context tokens because it already has `disable-model-invocation: true`. The benefit is solely reduced confusion, not performance.
 
 **Files:**
-- [ ] `.claude/skills/dhh-rails-style/SKILL.md` — Trim description to <200 chars
-- [ ] `.claude/skills/gemini-imagegen/SKILL.md` — Trim description to <200 chars
-- [ ] `.claude/skills/dspy-ruby/SKILL.md` — Trim description to <200 chars
-- [ ] All other auto-loading skills — Audit and trim descriptions to <200 chars
-- [ ] `.claude/skills/git-worktree/SKILL.md` — Add `disable-model-invocation: true` to frontmatter
-- [ ] Verify `learnings-researcher` model field (should be `inherit` not `haiku` per CHANGELOG v2.23.1)
+- [x] `.claude/skills/dhh-rails-style/SKILL.md` — Trim description to <200 chars
+- [x] `.claude/skills/gemini-imagegen/SKILL.md` — Trim description to <200 chars
+- [x] `.claude/skills/dspy-ruby/SKILL.md` — Trim description to <200 chars
+- [x] All other auto-loading skills — Audit and trim descriptions to <200 chars
+- [x] `.claude/skills/git-worktree/SKILL.md` — Add `disable-model-invocation: true` to frontmatter
+- [x] Verify `learnings-researcher` model field (should be `inherit` not `haiku` per CHANGELOG v2.23.1)
 
 **Acceptance criteria:**
-- [ ] All auto-loading skill descriptions under 200 characters
-- [ ] `git-worktree` has `disable-model-invocation: true`
-- [ ] `learnings-researcher` uses `model: inherit`
+- [x] All auto-loading skill descriptions under 200 characters
+- [x] `git-worktree` has `disable-model-invocation: true`
+- [x] `learnings-researcher` uses `model: inherit`
 
 ---
 
@@ -688,11 +688,11 @@ def validate_output_path(path: str, allowed_base: str = ".") -> str:
 **From security-sentinel:** Input paths also need validation. `edit_image.py` and `compose_images.py` send user-specified files to Google's Gemini API, creating a file exfiltration vector. An attacker could craft input paths like `/etc/passwd` and the script would upload the file content to the API.
 
 **Files:**
-- [ ] `.claude/skills/gemini-imagegen/scripts/generate_image.py` — Rewrite as thin argparse wrapper importing `GeminiImageGenerator`
-- [ ] `.claude/skills/gemini-imagegen/scripts/edit_image.py` — Same, with input path validation
-- [ ] `.claude/skills/gemini-imagegen/scripts/compose_images.py` — Same, with input path validation
-- [ ] `.claude/skills/gemini-imagegen/scripts/gemini_images.py` — Add `validate_path()` to the library class
-- [ ] `.claude/skills/gemini-imagegen/scripts/multi_turn_chat.py` — Add path validation
+- [x] `.claude/skills/gemini-imagegen/scripts/generate_image.py` — Rewrite as thin argparse wrapper importing `GeminiImageGenerator`
+- [x] `.claude/skills/gemini-imagegen/scripts/edit_image.py` — Same, with input path validation
+- [x] `.claude/skills/gemini-imagegen/scripts/compose_images.py` — Same, with input path validation
+- [x] `.claude/skills/gemini-imagegen/scripts/gemini_images.py` — Add `validate_path()` to the library class
+- [x] `.claude/skills/gemini-imagegen/scripts/multi_turn_chat.py` — Add path validation
 
 **Path validation helper (add to `gemini_images.py`):**
 ```python
@@ -708,11 +708,11 @@ def validate_path(path: str, must_exist: bool = False) -> str:
 ```
 
 **Acceptance criteria:**
-- [ ] No duplicated Gemini API logic across scripts
-- [ ] All 3 CLI scripts import from `gemini_images.py`
-- [ ] ALL 5 Python files have path validation using `commonpath()` + base directory check
-- [ ] Input paths validated before sending to Gemini API (prevents file exfiltration)
-- [ ] Output paths validated before writing (prevents path traversal)
+- [x] No duplicated Gemini API logic across scripts
+- [x] All 3 CLI scripts import from `gemini_images.py`
+- [x] ALL 5 Python files have path validation using `commonpath()` + base directory check
+- [x] Input paths validated before sending to Gemini API (prevents file exfiltration)
+- [x] Output paths validated before writing (prevents path traversal)
 
 ---
 
@@ -720,14 +720,14 @@ def validate_path(path: str, must_exist: bool = False) -> str:
 
 After all changes, bump version per CLAUDE.md requirements:
 
-- [ ] `.claude/.claude-plugin/plugin.json` — Bump to `2.32.0` (MINOR: structural improvements)
-- [ ] `.claude/CHANGELOG.md` — Add `[2.32.0]` entry documenting all 15 fixes
-- [ ] `.claude/README.md` — Verify/update component counts:
+- [x] `.claude/.claude-plugin/plugin.json` — Bump to `2.32.0` (MINOR: structural improvements)
+- [x] `.claude/CHANGELOG.md` — Add `[2.32.0]` entry documenting all 15 fixes
+- [x] `.claude/README.md` — Verify/update component counts:
   - Agents: 29 (unchanged)
   - Commands: 24 (unchanged)
   - Skills: 17 (18 - 1 removed `skill-creator`)
   - MCP Servers: 1 (unchanged)
-- [ ] `plugin.json` description — Update to "29 agents, 24 commands, 17 skills, 1 MCP server"
+- [x] `plugin.json` description — Update to "29 agents, 24 commands, 17 skills, 1 MCP server"
 
 ## Success Metrics
 

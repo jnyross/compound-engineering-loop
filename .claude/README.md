@@ -7,8 +7,8 @@ AI-powered development tools that get smarter with every use. Make each unit of 
 | Component | Count |
 |-----------|-------|
 | Agents | 29 |
-| Commands | 25 |
-| Skills | 16 |
+| Commands | 24 |
+| Skills | 17 |
 | MCP Servers | 1 |
 
 ## Agents
@@ -98,11 +98,13 @@ Core workflow commands use `workflows:` prefix to avoid collisions with built-in
 | `/report-bug` | Report a bug in the plugin |
 | `/reproduce-bug` | Reproduce bugs using logs and console |
 | `/resolve_parallel` | Resolve TODO comments in parallel |
-| `/resolve_pr_parallel` | Resolve PR comments in parallel |
 | `/resolve_todo_parallel` | Resolve todos in parallel |
 | `/triage` | Triage and prioritize issues |
+| `/agent-native-audit` | Run comprehensive agent-native architecture review |
+| `/deploy-docs` | Validate and prepare documentation for GitHub Pages deployment |
+| `/release-docs` | Build and update the documentation site with current plugin components |
 | `/test-browser` | Run browser tests on PR-affected pages |
-| `/xcode-test` | Build and test iOS apps on simulator |
+| `/test-xcode` | Build and test iOS apps on simulator |
 | `/feature-video` | Record video walkthroughs and add to PR description |
 
 ## Skills
@@ -123,7 +125,7 @@ Core workflow commands use `workflows:` prefix to avoid collisions with built-in
 | `dhh-rails-style` | Write Ruby/Rails code in DHH's 37signals style |
 | `dspy-ruby` | Build type-safe LLM applications with DSPy.rb |
 | `frontend-design` | Create production-grade frontend interfaces |
-| `skill-creator` | Guide for creating effective Claude Code skills |
+
 
 ### Content & Workflow
 
@@ -134,6 +136,7 @@ Core workflow commands use `workflows:` prefix to avoid collisions with built-in
 | `every-style-editor` | Review copy for Every's style guide compliance |
 | `file-todos` | File-based todo tracking system |
 | `git-worktree` | Manage Git worktrees for parallel development |
+| `resolve-pr-parallel` | Resolve all PR comments using parallel processing |
 
 ### Multi-Agent Orchestration
 

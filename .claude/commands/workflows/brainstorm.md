@@ -20,6 +20,17 @@ Brainstorming helps answer **WHAT** to build through collaborative dialogue. It 
 
 Do not proceed until you have a feature description from the user.
 
+## Mode Detection
+
+Check `ANTFARM_MODE` environment variable (default: `interactive`).
+
+| Mode | Behavior |
+|------|----------|
+| `interactive` (default) | Pause for human input at all decision gates using AskUserQuestion |
+| `autonomous` | Skip AskUserQuestion calls, auto-proceed with best judgment, produce output directly |
+
+When `ANTFARM_MODE=autonomous`: skip all AskUserQuestion calls, choose the recommended approach automatically, and write the brainstorm document without waiting for user input. This enables review rejection → brainstorm loops to complete without human intervention.
+
 ## Execution Flow
 
 ### Phase 0: Assess Requirements Clarity

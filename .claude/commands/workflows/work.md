@@ -16,6 +16,26 @@ This command takes a work document (plan, specification, or todo file) and execu
 
 <input_document> #$ARGUMENTS </input_document>
 
+## Mode Detection
+
+Check `ANTFARM_MODE` environment variable (default: `interactive`).
+
+| Mode | Behavior |
+|------|----------|
+| `interactive` (default) | Pause for human approval at branch selection and clarifying questions |
+| `autonomous` | Skip approval gates, auto-create feature branch, proceed with best judgment |
+
+When `ANTFARM_MODE=autonomous`: skip "Continue on this branch?" questions, auto-create feature branches, and proceed without user approval gates.
+
+## Fix Mode (when REVIEW ISSUES is non-empty)
+
+When re-entering work from a review with issues:
+1. Read the REVIEW ISSUES carefully
+2. Create TodoWrite tasks for each issue
+3. Fix issues in priority order
+4. Make incremental commits for each fix
+5. Re-run quality checks
+
 ## Execution Workflow
 
 ### Phase 1: Quick Start
@@ -170,7 +190,7 @@ This command takes a work document (plan, specification, or todo file) and execu
    # Examples: bin/rails test, npm test, pytest, go test, etc.
 
    # Run linting (per CLAUDE.md)
-   # Use linting-agent before pushing to origin
+   # Use lint agent before pushing to origin
    ```
 
 2. **Consider Reviewer Agents** (Optional)
@@ -181,8 +201,6 @@ This command takes a work document (plan, specification, or todo file) and execu
    - **kieran-rails-reviewer**: Verify Rails conventions (Rails projects)
    - **performance-oracle**: Check for performance issues
    - **security-sentinel**: Scan for security vulnerabilities
-   - **cora-test-reviewer**: Review test quality (Rails projects with comprehensive test coverage)
-
    Run reviewers in parallel with Task tool:
 
    ```
@@ -239,13 +257,9 @@ This command takes a work document (plan, specification, or todo file) and execu
    ```
    See the `agent-browser` skill for detailed usage.
 
-   **Step 3: Upload using imgup skill**
-   ```bash
-   skill: imgup
-   # Then upload each screenshot:
-   imgup -h pixhost screenshot.png  # pixhost works without API key
-   # Alternative hosts: catbox, imagebin, beeimg
-   ```
+   **Step 3: Upload screenshots**
+
+   Use an image hosting service to upload screenshots for PR descriptions.
 
    **What to capture:**
    - **New screens**: Screenshot of the new UI
@@ -402,7 +416,7 @@ Before creating PR, verify:
 - [ ] All clarifying questions asked and answered
 - [ ] All TodoWrite tasks marked completed
 - [ ] Tests pass (run project's test command)
-- [ ] Linting passes (use linting-agent)
+- [ ] Linting passes (use lint agent)
 - [ ] Code follows existing patterns
 - [ ] Figma designs match implementation (if applicable)
 - [ ] Before/after screenshots captured and uploaded (for UI changes)

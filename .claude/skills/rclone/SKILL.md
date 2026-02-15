@@ -1,6 +1,6 @@
 ---
 name: rclone
-description: Upload, sync, and manage files across cloud storage providers using rclone. Use when uploading files (images, videos, documents) to S3, Cloudflare R2, Backblaze B2, Google Drive, Dropbox, or any S3-compatible storage. Triggers on "upload to S3", "sync to cloud", "rclone", "backup files", "upload video/image to bucket", or requests to transfer files to remote storage.
+description: Upload, sync, and manage files across cloud storage with rclone. Use when transferring files to S3, R2, B2, Google Drive, Dropbox, or any S3-compatible storage.
 ---
 
 # rclone File Transfer Skill
@@ -25,13 +25,15 @@ Guide the user to install:
 # macOS
 brew install rclone
 
-# Linux (script install)
-curl https://rclone.org/install.sh | sudo bash
-
-# Or via package manager
+# Linux
 sudo apt install rclone  # Debian/Ubuntu
 sudo dnf install rclone  # Fedora
+
+# Other platforms
+# Download from https://rclone.org/downloads/
 ```
+
+> **Note:** Package manager versions may lag behind upstream. For the latest version, download from https://rclone.org/downloads/
 
 ### If NO remotes are configured
 
