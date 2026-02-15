@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
 if [ $# -lt 1 ]; then
     echo "Usage: get-pr-comments PR_NUMBER [OWNER/REPO]"

@@ -23,6 +23,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **agents/compound/AGENTS.md** — Removed redundant Common Mistakes table (todo 020)
 - **workflow.yml** — Condensed review step input to defer to AGENTS.md (todo 020)
 
+## [2.33.3] - 2026-02-15
+
+### Fixed
+
+- **Codebase cleanup** — Updated 10 todo statuses from pending to done, added work log entries
+- **Shell scripts** — Added `set -euo pipefail` to resolve-pr-parallel scripts
+- **GitHub Actions** — Fixed permissions to allow Claude Code to write to PRs/issues
+
+### Changed
+
+- **package-lock.json** — Updated package name to compound-engineering-loop
+
 ## [2.33.1] - 2026-02-15
 
 ### Added

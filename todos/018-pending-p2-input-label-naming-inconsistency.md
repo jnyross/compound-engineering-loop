@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 priority: p2
 issue_id: "018"
 tags: [code-review, workflow, quality, naming-convention]
@@ -102,3 +102,10 @@ Agents see the rendered input text with labels, then their AGENTS.md references 
 - Mapped all references to review issues across workflow.yml and AGENTS.md files
 - Identified three naming variants: PREVIOUS REVIEW ISSUES, REVIEW ISSUES, REVIEW_ISSUES
 - Confirmed LLMs handle this gracefully but it's a maintenance burden
+
+### 2026-02-15 - Completed via CHANGELOG v2.33.2
+
+**By:** Claude Code Review
+
+**Actions:**
+- Fixed in CHANGELOG v2.33.2 - "Standardized all input labels to UPPER_SNAKE_CASE matching output keys"

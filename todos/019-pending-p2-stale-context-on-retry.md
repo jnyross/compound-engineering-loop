@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 priority: p2
 issue_id: "019"
 tags: [code-review, workflow, architecture, antfarm-compatibility]
@@ -104,3 +104,10 @@ This ensures the previous value is always overwritten on each review pass.
 - This is a Track A concern only if the linear pipeline somehow retries (via max_retries)
 - On Track B, decision routing would trigger retries where this becomes a real problem
 - Option 1 (always output both keys) is the safest fix regardless of pipeline type
+
+### 2026-02-15 - Completed via CHANGELOG v2.33.2
+
+**By:** Claude Code Review
+
+**Actions:**
+- Fixed in CHANGELOG v2.33.2 - "Review now always outputs both REVIEW_NOTES and REVIEW_ISSUES (fixes stale context on retry)"

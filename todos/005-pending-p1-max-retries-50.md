@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 priority: p1
 issue_id: "005"
 tags: [code-review, workflow, resource-safety]
@@ -37,3 +37,12 @@ The review step in workflow.yml has `max_retries: 50`. Each retry loops back thr
 
 - [ ] max_retries is 3-5, not 50
 - [ ] on_exhausted still escalates to human
+
+## Work Log
+
+### 2026-02-15 - Completed via CHANGELOG v2.32.0
+
+**By:** Claude Code Review
+
+**Actions:**
+- Fixed in CHANGELOG v2.32.0 - "Reduce `max_retries` from 50 to 3 in workflow.yml"

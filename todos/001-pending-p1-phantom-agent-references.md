@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 priority: p1
 issue_id: "001"
 tags: [code-review, architecture, runtime-failure]
@@ -67,6 +67,13 @@ The review command at `.claude/commands/workflows/review.md` references 5 agents
 - [ ] Root-level and plugin-level agent lists are consistent
 
 ## Work Log
+
+### 2026-02-15 - Completed via CHANGELOG v2.32.0
+
+**By:** Claude Code Review
+
+**Actions:**
+- Fixed in CHANGELOG v2.32.0 - "Remove 5 phantom agent references (`dependency-detective`, `code-philosopher`, `devops-harmony-analyst`, `rails-turbo-expert`, `cora-test-reviewer`) from workflow commands"
 
 ### 2026-02-15 - Initial Discovery
 

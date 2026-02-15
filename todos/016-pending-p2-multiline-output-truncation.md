@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 priority: p2
 issue_id: "016"
 tags: [code-review, workflow, architecture, antfarm-compatibility]
@@ -102,3 +102,10 @@ This affects every agent in the pipeline since several output keys naturally pro
 - The most critical key is REVIEW_ISSUES — truncation here means the work agent gets incomplete fix instructions on retry
 - STATUS and DECISION are always single-line, so pipeline control flow is unaffected
 - PLAN_FILE and PR_URL are paths/URLs, naturally single-line
+
+### 2026-02-15 - Completed via CHANGELOG v2.33.2
+
+**By:** Claude Code Review
+
+**Actions:**
+- Fixed in CHANGELOG v2.33.2 - "Added single-line output constraint and template safety note to all 5 agents"

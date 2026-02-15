@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 priority: p1
 issue_id: "002"
 tags: [code-review, workflow, runtime-failure]
@@ -45,3 +45,12 @@ The Review `AGENTS.md` tells the agent to output `STATUS: retry` on rejection, b
 
 - [ ] Review agent always outputs `STATUS: done` regardless of DECISION value
 - [ ] workflow.yml `expects` condition is satisfied by all review outcomes
+
+## Work Log
+
+### 2026-02-15 - Completed via CHANGELOG v2.32.0
+
+**By:** Claude Code Review
+
+**Actions:**
+- Fixed in CHANGELOG v2.32.0 - "Fix review agent STATUS output — `STATUS: retry` → `STATUS: done`"

@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 priority: p2
 issue_id: "017"
 tags: [code-review, workflow, architecture, antfarm-compatibility]
@@ -98,3 +98,10 @@ This means after a rejected review, the compound agent would create a solution d
 **Learnings:**
 - On Track B (decision routing), compound only runs on `approved`, making this a Track A-only concern
 - The fix is cheap and prevents bad documentation from being committed
+
+### 2026-02-15 - Completed via CHANGELOG v2.33.2
+
+**By:** Claude Code Review
+
+**Actions:**
+- Fixed in CHANGELOG v2.33.2 - "Added Phase 0 decision check to compound agent; skips documentation on non-approved reviews"
